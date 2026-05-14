@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs } from "../cli";
+import { parseArgs } from "@/cli";
 
 describe("parseArgs", () => {
   test("parses question mode", () => {

@@ -1,10 +1,10 @@
 import pc from "picocolors";
 import { intro, outro } from "@clack/prompts";
 
-import { formatError } from "./src/error";
-import { readQuestion, CANCEL } from "./src/input";
-import { getModelConfig, streamQuestion } from "./src/ai";
-import { parseArgs, printHelp, printVersion } from "./src/cli";
+import { formatError } from "@/error";
+import { readQuestion, CANCEL } from "@/input";
+import { getModelConfig, streamQuestion } from "@/ai";
+import { parseArgs, printHelp, printVersion } from "@/cli";
 
 async function handleQuestion(
   question: string,
@@ -71,4 +71,4 @@ async function run(): Promise<void> {
   }
 }
 
-run();
+void run();

@@ -5,7 +5,7 @@ import {
   fauxText,
   fauxThinking,
 } from "@earendil-works/pi-ai";
-import { streamQuestion, getModelConfig } from "../ai";
+import { streamQuestion, getModelConfig } from "@/ai";
 
 describe("streamQuestion", () => {
   test("streams text deltas", async () => {
