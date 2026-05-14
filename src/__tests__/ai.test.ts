@@ -5,20 +5,22 @@ import {
   fauxText,
   fauxThinking,
 } from "@earendil-works/pi-ai";
-import { streamQuestion, getModelConfig } from "../ai.ts";
+import { streamQuestion, getModelConfig } from "../ai";
 
 describe("streamQuestion", () => {
   test("streams text deltas", async () => {
     const reg = registerFauxProvider({ tokensPerSecond: 0 });
     const model = reg.getModel();
 
-    reg.setResponses([
-      fauxAssistantMessage([fauxText("Hello world")]),
-    ]);
+    reg.setResponses([fauxAssistantMessage([fauxText("Hello world")])]);
 
     const parts: string[] = [];
 
-    for await (const event of streamQuestion("Hi", { provider: "", model: "", apiKey: "test" }, { model })) {
+    for await (const event of streamQuestion(
+      "Hi",
+      { provider: "", model: "", apiKey: "test" },
+      { model },
+    )) {
       if (event.type === "text") parts.push(event.delta);
     }
 
@@ -40,7 +42,11 @@ describe("streamQuestion", () => {
     const thinkingParts: string[] = [];
     const textParts: string[] = [];
 
-    for await (const event of streamQuestion("What is the meaning of life?", { provider: "", model: "", apiKey: "test" }, { model })) {
+    for await (const event of streamQuestion(
+      "What is the meaning of life?",
+      { provider: "", model: "", apiKey: "test" },
+      { model },
+    )) {
       if (event.type === "thinking") thinkingParts.push(event.delta);
       if (event.type === "text") textParts.push(event.delta);
     }
@@ -60,7 +66,11 @@ describe("streamQuestion", () => {
 
     const parts: string[] = [];
 
-    for await (const event of streamQuestion("Think!", { provider: "", model: "", apiKey: "test" }, { model })) {
+    for await (const event of streamQuestion(
+      "Think!",
+      { provider: "", model: "", apiKey: "test" },
+      { model },
+    )) {
       if (event.type === "thinking") parts.push(event.delta);
     }
 
@@ -73,7 +83,9 @@ describe("streamQuestion", () => {
     const model = reg.getModel();
 
     reg.setResponses([
-      fauxAssistantMessage([fauxText("This is a long response that should be cancelled")]),
+      fauxAssistantMessage([
+        fauxText("This is a long response that should be cancelled"),
+      ]),
     ]);
 
     const controller = new AbortController();
@@ -81,7 +93,11 @@ describe("streamQuestion", () => {
 
     setTimeout(() => controller.abort(), 50);
 
-    const stream = streamQuestion("Hi", { provider: "", model: "", apiKey: "test" }, { model, signal: controller.signal });
+    const stream = streamQuestion(
+      "Hi",
+      { provider: "", model: "", apiKey: "test" },
+      { model, signal: controller.signal },
+    );
 
     try {
       for await (const event of stream) {

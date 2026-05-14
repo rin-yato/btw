@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatError } from "../error.ts";
+import { formatError } from "../error";
 
 describe("formatError", () => {
   test("formats 401 / unauthorized errors", () => {

@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 
@@ -14,15 +14,15 @@ Support Ctrl+C cancellation that keeps partial output visible. Extract and displ
 
 ## Acceptance criteria
 
-- [ ] `btw <question>` sends the question to pi-ai and streams the response to stdout
-- [ ] The response appears incrementally (token by token), not all at once
-- [ ] `btw --help` prints usage information
-- [ ] `btw --version` prints the current version
-- [ ] Ctrl+C cancels the response and keeps partial output visible
-- [ ] Thinking/reasoning content is displayed when the model provides it
-- [ ] Errors (network failure, invalid API key) show a human-readable message, not a stack trace
-- [ ] Project uses Bun, TypeScript strict mode, and `@earendil-works/pi-ai`
-- [ ] AI client is tested with pi-ai's faux provider covering streaming, cancellation, and thinking extraction
+- [x] `btw <question>` sends the question to pi-ai and streams the response to stdout
+- [x] The response appears incrementally (token by token), not all at once
+- [x] `btw --help` prints usage information
+- [x] `btw --version` prints the current version
+- [x] Ctrl+C cancels the response and keeps partial output visible
+- [x] Thinking/reasoning content is displayed when the model provides it
+- [x] Errors (network failure, invalid API key) show a human-readable message, not a stack trace
+- [x] Project uses Bun, TypeScript strict mode, and `@earendil-works/pi-ai`
+- [x] AI client is tested with pi-ai's faux provider covering streaming, cancellation, and thinking extraction
 
 ## Blocked by
 

@@ -27,14 +27,21 @@ export async function* streamQuestion(
   config: ModelConfig,
   options?: { signal?: AbortSignal; model?: Model<any> },
 ): AsyncGenerator<StreamEvent, void, void> {
-  const resolvedModel = options?.model ?? getModel(config.provider as any, config.model);
+  const resolvedModel =
+    options?.model ?? getModel(config.provider as any, config.model);
 
-  const messages = [{ role: "user" as const, content: question, timestamp: Date.now() }];
+  const messages = [
+    { role: "user" as const, content: question, timestamp: Date.now() },
+  ];
 
-  const s = stream(resolvedModel, { messages }, {
-    signal: options?.signal,
-    apiKey: config.apiKey || undefined,
-  });
+  const s = stream(
+    resolvedModel,
+    { messages },
+    {
+      signal: options?.signal,
+      apiKey: config.apiKey || undefined,
+    },
+  );
 
   for await (const event of s) {
     switch (event.type) {

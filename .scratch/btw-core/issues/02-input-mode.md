@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: completed
 
 ## Parent
 
@@ -10,11 +10,11 @@ When the User runs `btw` with no arguments, open a multiline text input where th
 
 ## Acceptance criteria
 
-- [ ] `btw` with no arguments opens a multiline text input
-- [ ] User can type multiple lines with special characters
-- [ ] A clear key sequence submits the question
-- [ ] The response pipeline from issue 01 handles the submitted question
-- [ ] Edge cases: empty input shows a提示 message or re-prompts
+- [x] `btw` with no arguments opens a multiline text input
+- [x] User can type multiple lines with special characters
+- [x] A clear key sequence submits the question
+- [x] The response pipeline from issue 01 handles the submitted question
+- [x] Edge cases: empty input shows an error message or re-prompts
 
 ## Blocked by
 

@@ -17,7 +17,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
   const noThinking = args.includes("--no-thinking");
 
-  const positionalArgs = args.filter(a => !a.startsWith("-"));
+  const positionalArgs = args.filter((a) => !a.startsWith("-"));
 
   if (positionalArgs.length > 0) {
     return { mode: "question", question: positionalArgs.join(" "), noThinking };

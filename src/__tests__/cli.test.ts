@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs } from "../cli.ts";
+import { parseArgs } from "../cli";
 
 describe("parseArgs", () => {
   test("parses question mode", () => {
@@ -9,7 +9,16 @@ describe("parseArgs", () => {
   });
 
   test("parses question with multiple words", () => {
-    const result = parseArgs(["node", "btw", "what", "is", "the", "capital", "of", "France"]);
+    const result = parseArgs([
+      "node",
+      "btw",
+      "what",
+      "is",
+      "the",
+      "capital",
+      "of",
+      "France",
+    ]);
     expect(result.mode).toBe("question");
     expect(result.question).toBe("what is the capital of France");
   });
