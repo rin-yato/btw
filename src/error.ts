@@ -47,10 +47,7 @@ export function formatError(err: unknown): string {
       return `Network error. Check your internet connection and try again.`;
     }
 
-    if (
-      msg.toLowerCase().includes("timeout") ||
-      msg.toLowerCase().includes("timed out")
-    ) {
+    if (msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("timed out")) {
       return `Request timed out. The model took too long to respond.`;
     }
 

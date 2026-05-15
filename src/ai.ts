@@ -1,6 +1,7 @@
-import { stream, getModel, type Model } from "@earendil-works/pi-ai";
-import { readConfig } from "@/config";
+import { getModel, type Model, stream } from "@earendil-works/pi-ai";
+
 import { getApiKey } from "@/auth";
+import { readConfig } from "@/config";
 
 export interface StreamEvent {
   type: "text" | "thinking";
@@ -31,12 +32,9 @@ export async function* streamQuestion(
   config: ModelConfig,
   options?: { signal?: AbortSignal; model?: Model<any> },
 ): AsyncGenerator<StreamEvent, void, void> {
-  const resolvedModel =
-    options?.model ?? getModel(config.provider as any, config.model);
+  const resolvedModel = options?.model ?? getModel(config.provider as any, config.model);
 
-  const messages = [
-    { role: "user" as const, content: question, timestamp: Date.now() },
-  ];
+  const messages = [{ role: "user" as const, content: question, timestamp: Date.now() }];
 
   const s = stream(
     resolvedModel,

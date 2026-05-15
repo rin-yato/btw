@@ -1,7 +1,8 @@
-import { join } from "node:path";
-import { homedir } from "node:os";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 export interface ConfigSchema {
   provider: string;
@@ -38,12 +39,10 @@ export async function readConfig(): Promise<ConfigSchema | null> {
 export async function writeConfig(config: ConfigSchema): Promise<void> {
   const dir = getConfigDir();
   await mkdir(dir, { recursive: true });
-  await writeFile(configPath(), JSON.stringify(config, null, 2) + "\n");
+  await writeFile(configPath(), `${JSON.stringify(config, null, 2)}\n`);
 }
 
-export async function updateConfig(
-  partial: Partial<ConfigSchema>,
-): Promise<ConfigSchema> {
+export async function updateConfig(partial: Partial<ConfigSchema>): Promise<ConfigSchema> {
   const existing = (await readConfig()) ?? DEFAULTS;
   const merged = { ...existing, ...partial };
   await writeConfig(merged);
@@ -52,13 +51,10 @@ export async function updateConfig(
 
 function validateConfig(raw: Record<string, unknown>): ConfigSchema {
   return {
-    provider:
-      typeof raw.provider === "string" ? raw.provider : DEFAULTS.provider,
+    provider: typeof raw.provider === "string" ? raw.provider : DEFAULTS.provider,
     model: typeof raw.model === "string" ? raw.model : DEFAULTS.model,
     showThinking:
-      typeof raw.showThinking === "boolean"
-        ? raw.showThinking
-        : DEFAULTS.showThinking,
+      typeof raw.showThinking === "boolean" ? raw.showThinking : DEFAULTS.showThinking,
   };
 }
 

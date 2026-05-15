@@ -1,4 +1,4 @@
-import { multiline, isCancel, cancel } from "@clack/prompts";
+import { cancel, isCancel, multiline } from "@clack/prompts";
 
 export const CANCEL = Symbol("cancel");
 

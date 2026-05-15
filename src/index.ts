@@ -2,17 +2,17 @@
 
 import pc from "picocolors";
 
-import { formatError } from "@/error";
-import { readQuestion, CANCEL } from "@/input";
 import { getModelConfig, streamQuestion } from "@/ai";
 import { parseArgs, printHelp, printVersion } from "@/cli";
-import { connectFlow } from "@/connect";
 import { readConfig } from "@/config";
+import { connectFlow } from "@/connect";
+import { formatError } from "@/error";
+import { CANCEL, readQuestion } from "@/input";
 
 async function handleQuestion(
   question: string,
   noThinking: boolean,
-  modelOverride?: string,
+  _modelOverride?: string,
 ): Promise<void> {
   const config = await getModelConfig();
   const cfg = await readConfig();
@@ -70,11 +70,7 @@ async function run(): Promise<void> {
       return;
     }
     case "question": {
-      await handleQuestion(
-        parsed.question!,
-        parsed.noThinking,
-        parsed.modelOverride,
-      );
+      await handleQuestion(parsed.question!, parsed.noThinking, parsed.modelOverride);
       return;
     }
   }

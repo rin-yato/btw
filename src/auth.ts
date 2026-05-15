@@ -1,6 +1,7 @@
-import { join } from "node:path";
 import { homedir } from "node:os";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 function getAuthDir(): string {
   const xdg = process.env.XDG_CACHE_HOME;
@@ -32,7 +33,7 @@ async function readAll(): Promise<Record<string, string>> {
 async function writeAll(map: Record<string, string>): Promise<void> {
   const dir = getAuthDir();
   await mkdir(dir, { recursive: true });
-  await writeFile(authPath(), JSON.stringify(map, null, 2) + "\n");
+  await writeFile(authPath(), `${JSON.stringify(map, null, 2)}\n`);
 }
 
 export async function getApiKey(provider: string): Promise<string | null> {
@@ -40,10 +41,7 @@ export async function getApiKey(provider: string): Promise<string | null> {
   return map[provider] ?? null;
 }
 
-export async function setApiKey(
-  provider: string,
-  apiKey: string,
-): Promise<void> {
+export async function setApiKey(provider: string, apiKey: string): Promise<void> {
   const map = await readAll();
   map[provider] = apiKey;
   await writeAll(map);

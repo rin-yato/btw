@@ -1,14 +1,8 @@
-import {
-  intro,
-  select,
-  password,
-  outro,
-  isCancel,
-  cancel,
-} from "@clack/prompts";
+import { cancel, intro, isCancel, outro, password, select } from "@clack/prompts";
 import { getProviders } from "@earendil-works/pi-ai";
-import { updateConfig, readConfig } from "@/config";
+
 import { setApiKey } from "@/auth";
+import { readConfig, updateConfig } from "@/config";
 
 export async function connectFlow(): Promise<void> {
   intro("Connect to an AI provider");

@@ -20,9 +20,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
   const modelIndex = args.indexOf("--model");
   const modelOverride =
-    modelIndex !== -1 && modelIndex + 1 < args.length
-      ? args[modelIndex + 1]
-      : undefined;
+    modelIndex !== -1 && modelIndex + 1 < args.length ? args[modelIndex + 1] : undefined;
 
   const skipFlags = new Set(["--no-thinking", "--model"]);
   const positional = args.filter((a, i) => {

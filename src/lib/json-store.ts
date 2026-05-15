@@ -1,8 +1,9 @@
-import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { join } from "node:path";
 
-import { ok, err, type Result, type Err } from "@justmiracle/result";
+import { type Err, err, ok, type Result } from "@justmiracle/result";
+
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 const REASON_MESSAGES = {
   "not-found": "File not found",
@@ -48,7 +49,7 @@ export class JsonStore {
 
   async write<T>(data: T): Promise<Result<void, JsonStoreError>> {
     return mkdir(this.opts.dir, { recursive: true })
-      .then(() => writeFile(this.path(), JSON.stringify(data, null, 2) + "\n"))
+      .then(() => writeFile(this.path(), `${JSON.stringify(data, null, 2)}\n`))
       .then(ok)
       .catch(this.toJsonStoreError);
   }

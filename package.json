@@ -12,15 +12,15 @@
     "dev": "bun src/index.ts",
     "btw": "bun src/index.ts",
     "build": "bun build --minify --target node --outdir dist src/index.ts",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "check": "biome check",
+    "check:fix": "biome check --write --unsafe",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ci": "bun run check && bun run typecheck && bun test && bun run build"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "oxlint": "^1.64.0",
-    "oxlint-tsgolint": "^0.22.1"
+    "@biomejs/biome": "^2.4.15",
+    "@types/bun": "latest"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
