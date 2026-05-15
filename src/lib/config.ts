@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import type { JsonStore, JsonStoreError } from "@/lib/json-store";
 import { ModelStringSchema } from "@/lib/model";
+import { mergeObjects } from "@/lib/utils";
 
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 import * as v from "valibot";
@@ -56,6 +57,10 @@ export function getConfigDir(): string {
   return join(homedir(), ".config", "btw");
 }
 
+export function getConfigPath(): string {
+  return join(getConfigDir(), "config.json");
+}
+
 export class ConfigService {
   constructor(private store: JsonStore) {}
 
@@ -104,7 +109,7 @@ export class ConfigService {
     const existingResult = await this.readConfig();
     if (isErr(existingResult)) return existingResult;
 
-    const merged = { ...getDefaults(), ...(existingResult.value ?? {}), ...partial };
+    const merged = mergeObjects<ConfigSchema>(getDefaults(), existingResult.value, partial);
     const writeResult = await this.writeConfig(merged);
     if (isErr(writeResult)) return writeResult;
 
