@@ -254,8 +254,8 @@ The refactor is split into 8 sequential files under `.scratch/`, each with detai
 
 | # | File | What | Status |
 |---|------|------|--------|
-| 01 | [`.scratch/01-foundation.md`](.scratch/01-foundation.md) | `lib/errors.ts` + `lib/json-store.ts` + tests | pending |
-| 02 | [`.scratch/02-config-service.md`](.scratch/02-config-service.md) | `lib/config.ts` + test | pending |
+| 01 | [`.scratch/01-foundation.md`](.scratch/01-foundation.md) | `lib/json-store.ts` + tests | completed |
+| 02 | [`.scratch/02-config-service.md`](.scratch/02-config-service.md) | `lib/config.ts` + test | completed |
 | 03 | [`.scratch/03-auth-service.md`](.scratch/03-auth-service.md) | `lib/auth.ts` + test | pending |
 | 04 | [`.scratch/04-ai-service.md`](.scratch/04-ai-service.md) | `lib/ai.ts` + test | pending |
 | 05 | [`.scratch/05-question-service.md`](.scratch/05-question-service.md) | `lib/question.ts` + test | pending |

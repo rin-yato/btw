@@ -1,6 +1,6 @@
 # 02 — Config service
 
-**Status:** pending
+**Status:** done
 
 ## Detail
 
@@ -53,8 +53,8 @@ getDefaults(): ConfigSchema;
 
 ### Acceptance criteria
 
-- [ ] All functions return `Result<T, ConfigError>` — no thrown exceptions
-- [ ] `getDefaults()` is the single source of truth (removes default disagreement bug)
-- [ ] Old `src/config.ts` still works, old tests still pass
-- [ ] New `src/lib/config.test.ts` covers: read existing, read missing, write, update merge, defaults
-- [ ] `bun test` passes
+- [x] All functions return `Result<T, ConfigError>` — no thrown exceptions
+- [x] `getDefaults()` is the single source of truth (removes default disagreement bug)
+- [x] Old `src/config.ts` still works, old tests still pass
+- [x] New `src/lib/config.test.ts` covers: read existing, read missing, write, update merge, defaults
+- [x] `bun test` passes

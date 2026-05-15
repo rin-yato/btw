@@ -28,6 +28,7 @@
     "@justmiracle/result": "^2.0.0",
     "picocolors": "^1.1.1",
     "typescript": "6.0.3",
+    "valibot": "^1.4.0",
     "yargs": "^18.0.0"
   }
 }
