@@ -18,7 +18,9 @@ The project uses a flat module pattern — all 8 source files are peers in `src/
 ## Conventions
 
 - Use `@justmiracle/result` for all fallible operations — methods return `Result<T, E>` instead of throwing
-- Define proper error classes with metadata per module
+- Error classes extend `Error` directly (no shared base). Each uses an options-object constructor with `{ reason, message, cause?, meta? }`. Declare `readonly reason` and `readonly meta` as class fields.
+- No try/catch in async flows — use `.then()` / `.catch()` promise chains
+- Auto-bound error handlers use class property arrow functions (`private handleX = (...) => { ... }`) so call sites use `.catch(this.handleX)` without `.bind()` or inline arrows
 - Small modules: single file `lib/foo.ts` with test `lib/foo.test.ts` side-by-side
 - Complex modules (many error variants, constants): directory `lib/foo/index.ts`, `lib/foo/common.ts`, `lib/foo/index.test.ts`
 - Command flag `--model` uses `provider:model` format, e.g. `--model openai:gpt-4o-mini`
@@ -174,25 +176,6 @@ btw "explain quantum" --model anthropic:claude-sonnet-4-20250514
 
 ---
 
-## Migration Steps
-
-1. **Install `@justmiracle/result`**
-2. **Create `lib/json-store.ts` + test** — generic JSON file store with Result return
-3. **Create `lib/config.ts` + test** — extract from `config.ts`, use JsonStore, use Result
-4. **Create `lib/auth.ts` + test** — extract from `auth.ts`, use JsonStore, add env-var fallback
-5. **Create `lib/ai.ts` + test** — extract from `ai.ts`, fix `modelOverride` bug, fix double-read
-6. **Create `lib/question.ts` + test** — new file, extract orchestration from `index.ts`
-7. **Update `cli.ts`** — `--model` now parses `provider:model` format
-8. **Create `cmd/connect.ts` + test** — move from `connect.ts`, update imports
-9. **Rewrite `index.ts`** — thin dispatch, all Result-based
-10. **Update `error.ts`** — handle `@justmiracle/result` error types
-11. **Remove old files** — `config.ts`, `auth.ts`, `ai.ts`, `connect.ts` (logic migrated)
-12. **Verify** — `bun run typecheck`, `bun run lint`, `bun test`
-
----
-
----
-
 ## Remaining Files: Fate of Each
 
 ### `src/index.ts` — Rewrite, keep location
@@ -244,7 +227,7 @@ if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) { ... }
 
 // After: typed dispatch
 if (err instanceof AuthError) {
-  switch (err.cause) {
+  switch (err.reason) {
     case "invalid-key": return "Authentication failed. Check your API key is correct.";
     case "quota-exceeded": return "API quota exceeded. Check your billing plan.";
   }

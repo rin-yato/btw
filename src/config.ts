@@ -52,7 +52,8 @@ export async function updateConfig(
 
 function validateConfig(raw: Record<string, unknown>): ConfigSchema {
   return {
-    provider: typeof raw.provider === "string" ? raw.provider : DEFAULTS.provider,
+    provider:
+      typeof raw.provider === "string" ? raw.provider : DEFAULTS.provider,
     model: typeof raw.model === "string" ? raw.model : DEFAULTS.model,
     showThinking:
       typeof raw.showThinking === "boolean"

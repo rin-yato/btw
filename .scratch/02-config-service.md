@@ -8,6 +8,29 @@ Create `src/lib/config.ts` + test alongside the existing `src/config.ts`. Old fi
 
 Uses `JsonStore` (from Phase 1) for file I/O. Single `DEFAULTS` object — eliminates the current disagreement between `config.ts` defaults and `ai.ts` defaults.
 
+### Error pattern (follow json-store.ts)
+
+```typescript
+export type ConfigReason = "invalid-schema" | "missing-file";
+
+export class ConfigError extends Error {
+  declare readonly reason: ConfigReason;
+  declare readonly meta: Record<string, unknown>;
+
+  constructor(opts: {
+    reason: ConfigReason;
+    message: string;
+    cause?: unknown;
+    meta?: Record<string, unknown>;
+  }) {
+    super(opts.message, { cause: opts.cause });
+    this.name = this.constructor.name;
+    this.reason = opts.reason;
+    this.meta = opts.meta ?? {};
+  }
+}
+```
+
 ### Interface
 
 ```typescript
@@ -26,7 +49,7 @@ getDefaults(): ConfigSchema;
 
 - `readConfig` returns `ok(null)` when no config file exists (first-run state)
 - `updateConfig` merges partial into current (or defaults) and writes
-- `getDefaults` is a pure function returning `{ provider: "openai", model: "gpt-4o-mini", showThinking: true }`
+- `getDefaults` is pure: `{ provider: "openai", model: "gpt-4o-mini", showThinking: true }`
 
 ### Acceptance criteria
 
@@ -35,4 +58,3 @@ getDefaults(): ConfigSchema;
 - [ ] Old `src/config.ts` still works, old tests still pass
 - [ ] New `src/lib/config.test.ts` covers: read existing, read missing, write, update merge, defaults
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes

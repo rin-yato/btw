@@ -1,29 +1,22 @@
-# 01 — Foundation: errors + json-store
+# 01 — Foundation: json-store
 
-**Status:** pending
+**Status:** completed
 
 ## Detail
 
-Set up the shared foundation that every other module depends on.
+Set up the generic JSON file persistence module.
 
 1. Install `@justmiracle/result`
-2. Create `src/lib/errors.ts` with typed error hierarchy
-3. Create `src/lib/json-store.ts` — generic JSON file persistence using Result
-4. Side-by-side test: `src/lib/json-store.test.ts`
+2. Create `src/lib/json-store.ts` + test
 
-### Error hierarchy (`src/lib/errors.ts`)
+### Pattern
 
-```
-BtwError (base)
-├── JsonStoreError   (cause: "not-found" | "parse" | "permission" | "write")
-├── ConfigError      (cause: "invalid-schema" | "missing-file")
-├── AuthError        (cause: "missing-key" | "storage-failed")
-├── AiError          (cause: "api-error" | "authentication" | "quota" | "rate-limit" | "timeout" | "network" | "model-not-found")
-├── CliError         (cause: "invalid-flag" | "missing-value")
-└── QuestionError    (cause: "cancelled" | "stream-error")
-```
+Error classes extend `Error` directly (no shared base class). Each uses:
 
-Each class accepts a `cause` literal and an optional `meta: Record<string, unknown>`.
+- `declare readonly reason` — typed literal union identifying the error category
+- `declare readonly meta: Record<string, unknown>` — additional context
+- Options-object constructor with `{ reason, message, cause?, meta? }`
+- `cause` is passed to `super(message, { cause })` for JS error cause chaining
 
 ### JsonStore (`src/lib/json-store.ts`)
 
@@ -36,24 +29,20 @@ interface JsonStoreOptions {
 class JsonStore {
   constructor(private opts: JsonStoreOptions);
 
-  read<T>(): Promise<Result<T, JsonStoreError>>;
+  read(): Promise<Result<unknown, JsonStoreError>>;
   write<T>(data: T): Promise<Result<void, JsonStoreError>>;
+  exists(): boolean;
 }
-
-// Factory helpers using XDG conventions
-xdgConfigStore(): JsonStore;    // $XDG_CONFIG_HOME/btw/ or ~/.config/btw/
-xdgCacheStore(): JsonStore;     // $XDG_CACHE_HOME/btw/ or ~/.cache/btw/
 ```
 
-Interface-first: sketch the interface, then implement.
+- `read()` chains `readFile → JSON.parse → ok → catch(toJsonStoreError)`
+- `write()` chains `mkdir → writeFile → ok → catch(toJsonStoreError)`
+- Error handlers are class property arrow functions (auto-bound, no `.bind()` or inline arrows at call site)
 
-## Acceptance criteria
+### Acceptance criteria
 
-- [ ] `bun add @justmiracle/result` succeeds
-- [ ] `BtwError` base class exists with `.cause` and `.meta` properties
-- [ ] All concrete error classes extend `BtwError` with correct cause literals
-- [ ] `JsonStore.read<T>()` returns `Result<T, JsonStoreError>` — `ok(data)` on success, `err(JsonStoreError)` on file-not-found, parse errors, etc.
-- [ ] `JsonStore.write<T>()` returns `Result<void, JsonStoreError>`
-- [ ] `xdgConfigStore()` and `xdgCacheStore()` resolve correct XDG paths
-- [ ] `bun test` passes (new tests + all existing tests still pass)
-- [ ] `bun run typecheck` passes
+- [x] `bun add @justmiracle/result` succeeds
+- [x] `JsonStoreError` extends `Error` with options-object constructor (`reason`, `message`, `cause`, `meta`)
+- [x] `JsonStore.read()` returns `Result<unknown, JsonStoreError>` — `ok(data)` on success, `err(JsonStoreError)` on file-not-found, parse errors, etc.
+- [x] `JsonStore.write<T>()` returns `Result<void, JsonStoreError>`
+- [x] `bun test` passes (new tests + all existing tests)

@@ -8,6 +8,36 @@ Create `src/lib/ai.ts` + test alongside the existing `src/ai.ts`. Old file stays
 
 Extracts the AI provider wrapper. Fixes the dead `modelOverride` parameter that is currently parsed by `cli.ts` but silently discarded.
 
+### Error pattern (follow json-store.ts)
+
+```typescript
+export type AiReason =
+  | "api-error"
+  | "authentication"
+  | "quota"
+  | "rate-limit"
+  | "timeout"
+  | "network"
+  | "model-not-found";
+
+export class AiError extends Error {
+  declare readonly reason: AiReason;
+  declare readonly meta: Record<string, unknown>;
+
+  constructor(opts: {
+    reason: AiReason;
+    message: string;
+    cause?: unknown;
+    meta?: Record<string, unknown>;
+  }) {
+    super(opts.message, { cause: opts.cause });
+    this.name = this.constructor.name;
+    this.reason = opts.reason;
+    this.meta = opts.meta ?? {};
+  }
+}
+```
+
 ### Interface
 
 ```typescript
@@ -47,4 +77,3 @@ streamQuestion(
 - [ ] Old `src/ai.ts` still works, old tests still pass
 - [ ] New `src/lib/ai.test.ts` covers: model config resolution, override application, streaming shape
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes

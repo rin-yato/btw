@@ -19,17 +19,15 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/yargs": "^17.0.35",
     "oxlint": "^1.64.0",
     "oxlint-tsgolint": "^0.22.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
     "@earendil-works/pi-agent-core": "^0.74.0",
+    "@justmiracle/result": "^2.0.0",
     "picocolors": "^1.1.1",
+    "typescript": "6.0.3",
     "yargs": "^18.0.0"
   }
 }

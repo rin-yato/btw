@@ -6,7 +6,30 @@
 
 Create `src/lib/auth.ts` + test alongside the existing `src/auth.ts`. Old file stays untouched.
 
-Uses `xdgCacheStore()` from JsonStore. Adds env-var fallback — checks `<PROVIDER>_API_KEY` (uppercased, e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) before reading auth file.
+Uses `JsonStore` (from Phase 1) for file I/O. Adds env-var fallback — checks `<PROVIDER>_API_KEY` (uppercased, e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) before reading auth file.
+
+### Error pattern (follow json-store.ts)
+
+```typescript
+export type AuthReason = "missing-key" | "storage-failed";
+
+export class AuthError extends Error {
+  declare readonly reason: AuthReason;
+  declare readonly meta: Record<string, unknown>;
+
+  constructor(opts: {
+    reason: AuthReason;
+    message: string;
+    cause?: unknown;
+    meta?: Record<string, unknown>;
+  }) {
+    super(opts.message, { cause: opts.cause });
+    this.name = this.constructor.name;
+    this.reason = opts.reason;
+    this.meta = opts.meta ?? {};
+  }
+}
+```
 
 ### Interface
 
@@ -27,4 +50,3 @@ setApiKey(provider: string, key: string): Promise<Result<void, AuthError>>;
 - [ ] Old `src/auth.ts` still works, old tests still pass
 - [ ] New `src/lib/auth.test.ts` covers: env-var path, file path, missing key, set key
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes

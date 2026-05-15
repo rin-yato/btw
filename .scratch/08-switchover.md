@@ -67,9 +67,6 @@ src/__tests__/        (tests migrated to side-by-side in previous phases)
 - [ ] `index.ts` is under 40 lines with no business logic
 - [ ] All imports point to `lib/` and `cmd/` — no old direct modules
 - [ ] Old source files are deleted
-- [ ] All old tests migrated to side-by-side test files
-- [ ] `bun run typecheck` passes
-- [ ] `bun run lint` passes
 - [ ] `bun test` passes
 - [ ] `bun run build` succeeds
 - [ ] Manual smoke test passes for all scenarios

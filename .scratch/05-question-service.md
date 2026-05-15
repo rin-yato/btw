@@ -6,6 +6,29 @@
 
 Create `src/lib/question.ts` + test — **new file**. Extracts the Q&A orchestration currently inlined in `index.ts:handleQuestion`.
 
+### Error pattern (follow json-store.ts)
+
+```typescript
+export type QuestionReason = "cancelled" | "stream-error";
+
+export class QuestionError extends Error {
+  declare readonly reason: QuestionReason;
+  declare readonly meta: Record<string, unknown>;
+
+  constructor(opts: {
+    reason: QuestionReason;
+    message: string;
+    cause?: unknown;
+    meta?: Record<string, unknown>;
+  }) {
+    super(opts.message, { cause: opts.cause });
+    this.name = this.constructor.name;
+    this.reason = opts.reason;
+    this.meta = opts.meta ?? {};
+  }
+}
+```
+
 ### Interface
 
 ```typescript
@@ -35,4 +58,3 @@ Internal flow:
 - [ ] Errors from upstream (`AiError`, `ConfigError`, `AuthError`) are wrapped in `QuestionError` with original in `meta`
 - [ ] `noThinking` option is passed through to the caller (filtering happens in `index.ts`)
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes

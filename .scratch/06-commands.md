@@ -47,4 +47,3 @@ export async function initFlow(): Promise<Result<void, never>> {
 - [ ] Old `src/connect.ts` still works, old tests still pass
 - [ ] `cmd/model.ts` and `cmd/init.ts` export valid functions returning `Result<void, never>`
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes

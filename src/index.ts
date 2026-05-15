@@ -14,7 +14,7 @@ async function handleQuestion(
   noThinking: boolean,
   modelOverride?: string,
 ): Promise<void> {
-  const config = await getModelConfig(modelOverride);
+  const config = await getModelConfig();
   const cfg = await readConfig();
   const hideThinking = noThinking || cfg?.showThinking === false;
   const controller = new AbortController();

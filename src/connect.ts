@@ -1,4 +1,11 @@
-import { intro, select, password, outro, isCancel, cancel } from "@clack/prompts";
+import {
+  intro,
+  select,
+  password,
+  outro,
+  isCancel,
+  cancel,
+} from "@clack/prompts";
 import { getProviders } from "@earendil-works/pi-ai";
 import { updateConfig, readConfig } from "@/config";
 import { setApiKey } from "@/auth";

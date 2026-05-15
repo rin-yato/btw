@@ -11,7 +11,27 @@ Two independent changes — listed together because both are in-place modificati
 - `--model` flag changes from `--model <model-id>` to `--model <provider:model>` (colon separator)
 - `parseArgs` returns `Result<ParsedArgs, CliError>` for validation
 - Validates that when `--model` is present, the value contains a `:`
-- `parseArgs` signature changes from synchronous to wrapped in Result
+
+```typescript
+export type CliReason = "invalid-flag" | "missing-value";
+
+export class CliError extends Error {
+  declare readonly reason: CliReason;
+  declare readonly meta: Record<string, unknown>;
+
+  constructor(opts: {
+    reason: CliReason;
+    message: string;
+    cause?: unknown;
+    meta?: Record<string, unknown>;
+  }) {
+    super(opts.message, { cause: opts.cause });
+    this.name = this.constructor.name;
+    this.reason = opts.reason;
+    this.meta = opts.meta ?? {};
+  }
+}
+```
 
 ```typescript
 interface ParsedArgs {
@@ -35,7 +55,7 @@ formatError(err: unknown): string;
 ```
 
 Before: `if (msg.includes("401") || msg.toLowerCase().includes("unauthorized"))`
-After: `if (err instanceof AiError && err.cause === "authentication")`
+After: `if (err instanceof AiError && err.reason === "authentication")`
 
 Dispatch order:
 1. `JsonStoreError` → file-level messages
@@ -50,10 +70,9 @@ Dispatch order:
 
 - [ ] `parseArgs` returns `Result<ParsedArgs, CliError>` — no thrown exceptions
 - [ ] `--model openai:gpt-4o-mini` parses to `modelOverride: "openai:gpt-4o-mini"`
-- [ ] `--model` without value returns `err(CliError)` with cause `"missing-value"`
-- [ ] `--model openai` (no colon) returns `err(CliError)` with cause `"invalid-flag"`
+- [ ] `--model` without value returns `err(CliError)` with reason `"missing-value"`
+- [ ] `--model openai` (no colon) returns `err(CliError)` with reason `"invalid-flag"`
 - [ ] Help text shows `--model <provider:model>`
-- [ ] `formatError(certain AiError)` returns correct user-friendly message based on cause
+- [ ] `formatError(err instanceof AiError)` returns correct user-friendly message based on reason
 - [ ] `formatError(unknown error)` falls back to `String(err)`
 - [ ] `bun test` passes
-- [ ] `bun run typecheck` passes
