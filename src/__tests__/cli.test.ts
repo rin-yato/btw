@@ -65,4 +65,45 @@ describe("parseArgs", () => {
     const result = parseArgs(["node", "btw", "hi"]);
     expect(result.noThinking).toBe(false);
   });
+
+  test("parses connect subcommand", () => {
+    const result = parseArgs(["node", "btw", "connect"]);
+    expect(result.mode).toBe("connect");
+  });
+
+  test("parses --model flag with question", () => {
+    const result = parseArgs([
+      "node",
+      "btw",
+      "--model",
+      "anthropic/claude-sonnet-4",
+      "hello",
+    ]);
+    expect(result.mode).toBe("question");
+    expect(result.question).toBe("hello");
+    expect(result.modelOverride).toBe("anthropic/claude-sonnet-4");
+  });
+
+  test("parses --model flag without question", () => {
+    const result = parseArgs(["node", "btw", "--model", "groq/llama-3"]);
+    expect(result.mode).toBe("no-args");
+    expect(result.modelOverride).toBe("groq/llama-3");
+  });
+
+  test("parses --model with connect", () => {
+    const result = parseArgs([
+      "node",
+      "btw",
+      "connect",
+      "--model",
+      "xai/grok-3",
+    ]);
+    expect(result.mode).toBe("connect");
+    expect(result.modelOverride).toBe("xai/grok-3");
+  });
+
+  test("modelOverride undefined when --model not provided", () => {
+    const result = parseArgs(["node", "btw", "hi"]);
+    expect(result.modelOverride).toBeUndefined();
+  });
 });

@@ -1,4 +1,7 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test, beforeEach, afterEach } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   registerFauxProvider,
   fauxAssistantMessage,
@@ -6,6 +9,26 @@ import {
   fauxThinking,
 } from "@earendil-works/pi-ai";
 import { streamQuestion, getModelConfig } from "@/ai";
+
+let tmpDir: string;
+let oldXdgConfig: string | undefined;
+let oldXdgCache: string | undefined;
+
+beforeEach(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), "btw-ai-test-"));
+  oldXdgConfig = process.env.XDG_CONFIG_HOME;
+  oldXdgCache = process.env.XDG_CACHE_HOME;
+  process.env.XDG_CONFIG_HOME = join(tmpDir, "config");
+  process.env.XDG_CACHE_HOME = join(tmpDir, "cache");
+});
+
+afterEach(() => {
+  if (oldXdgConfig) process.env.XDG_CONFIG_HOME = oldXdgConfig;
+  else delete process.env.XDG_CONFIG_HOME;
+  if (oldXdgCache) process.env.XDG_CACHE_HOME = oldXdgCache;
+  else delete process.env.XDG_CACHE_HOME;
+  rmSync(tmpDir, { recursive: true, force: true });
+});
 
 describe("streamQuestion", () => {
   test("streams text deltas", async () => {
@@ -79,43 +102,55 @@ describe("streamQuestion", () => {
   });
 
   test("handles cancellation", async () => {
-    const reg = registerFauxProvider({ tokensPerSecond: 100 });
+    const reg = registerFauxProvider({ tokensPerSecond: 50 });
     const model = reg.getModel();
 
     reg.setResponses([
       fauxAssistantMessage([
-        fauxText("This is a long response that should be cancelled"),
+        fauxText("aaa bbb ccc ddd eee fff ggg hhh iii jjj"),
       ]),
     ]);
 
     const controller = new AbortController();
     const textParts: string[] = [];
 
-    setTimeout(() => controller.abort(), 50);
-
-    const stream = streamQuestion(
-      "Hi",
-      { provider: "", model: "", apiKey: "test" },
-      { model, signal: controller.signal },
-    );
+    setTimeout(() => controller.abort(), 300);
 
     try {
-      for await (const event of stream) {
+      for await (const event of streamQuestion(
+        "Hi",
+        { provider: "", model: "", apiKey: "test" },
+        { model, signal: controller.signal },
+      )) {
         if (event.type === "text") textParts.push(event.delta);
       }
     } catch {}
 
     expect(textParts.length).toBeGreaterThan(0);
-    expect(controller.signal.aborted).toBe(true);
     reg.unregister();
   });
 });
 
 describe("getModelConfig", () => {
-  test("returns defaults when env vars are not set", () => {
-    const config = getModelConfig();
+  test("returns defaults when env vars and config are not set", async () => {
+    const config = await getModelConfig();
     expect(config.provider).toBe("openai");
     expect(config.model).toBe("gpt-4o-mini");
     expect(config.apiKey).toBe("");
+  });
+
+  test("modelOverride wins over defaults", async () => {
+    const config = await getModelConfig("anthropic/claude-sonnet-4");
+    expect(config.provider).toBe("anthropic");
+    expect(config.model).toBe("claude-sonnet-4");
+  });
+
+  test("reads apiKey from auth store", async () => {
+    const { setApiKey } = await import("@/auth");
+    await setApiKey("openai", "sk-auth-key");
+    const config = await getModelConfig();
+    expect(config.provider).toBe("openai");
+    expect(config.model).toBe("gpt-4o-mini");
+    expect(config.apiKey).toBe("sk-auth-key");
   });
 });

@@ -1,16 +1,22 @@
+#!/usr/bin/env node
+
 import pc from "picocolors";
-import { intro, outro } from "@clack/prompts";
 
 import { formatError } from "@/error";
 import { readQuestion, CANCEL } from "@/input";
 import { getModelConfig, streamQuestion } from "@/ai";
 import { parseArgs, printHelp, printVersion } from "@/cli";
+import { connectFlow } from "@/connect";
+import { readConfig } from "@/config";
 
 async function handleQuestion(
   question: string,
   noThinking: boolean,
+  modelOverride?: string,
 ): Promise<void> {
-  const config = getModelConfig();
+  const config = await getModelConfig(modelOverride);
+  const cfg = await readConfig();
+  const hideThinking = noThinking || cfg?.showThinking === false;
   const controller = new AbortController();
 
   process.on("SIGINT", () => controller.abort());
@@ -22,7 +28,7 @@ async function handleQuestion(
 
     for await (const event of stream) {
       if (event.type === "thinking") {
-        if (!noThinking) process.stderr.write(pc.dim(event.delta));
+        if (!hideThinking) process.stderr.write(pc.dim(event.delta));
       }
       if (event.type === "text") {
         process.stdout.write(event.delta);
@@ -51,21 +57,24 @@ async function run(): Promise<void> {
     case "version":
       printVersion();
       return;
+    case "connect":
+      await connectFlow();
+      return;
     case "no-args": {
       const question = await readQuestion();
       if (question === CANCEL) {
         process.exit(0);
       }
 
-      await handleQuestion(question, parsed.noThinking);
+      await handleQuestion(question, parsed.noThinking, parsed.modelOverride);
       return;
     }
     case "question": {
-      intro(pc.cyan("btw"));
-
-      await handleQuestion(parsed.question!, parsed.noThinking);
-
-      outro(pc.dim("Done"));
+      await handleQuestion(
+        parsed.question!,
+        parsed.noThinking,
+        parsed.modelOverride,
+      );
       return;
     }
   }

@@ -1,7 +1,8 @@
 export interface ParsedArgs {
-  mode: "question" | "help" | "version" | "no-args";
+  mode: "question" | "help" | "version" | "no-args" | "connect";
   question?: string;
   noThinking: boolean;
+  modelOverride?: string;
 }
 
 export function parseArgs(argv: string[]): ParsedArgs {
@@ -17,13 +18,35 @@ export function parseArgs(argv: string[]): ParsedArgs {
 
   const noThinking = args.includes("--no-thinking");
 
-  const positionalArgs = args.filter((a) => !a.startsWith("-"));
+  const modelIndex = args.indexOf("--model");
+  const modelOverride =
+    modelIndex !== -1 && modelIndex + 1 < args.length
+      ? args[modelIndex + 1]
+      : undefined;
 
-  if (positionalArgs.length > 0) {
-    return { mode: "question", question: positionalArgs.join(" "), noThinking };
+  const skipFlags = new Set(["--no-thinking", "--model"]);
+  const positional = args.filter((a, i) => {
+    if (skipFlags.has(a)) return false;
+    if (a === "--model") return false;
+    const mi = args.indexOf("--model");
+    if (mi !== -1 && i === mi + 1) return false;
+    return true;
+  });
+
+  if (positional[0] === "connect") {
+    return { mode: "connect", noThinking, modelOverride };
   }
 
-  return { mode: "no-args", noThinking };
+  if (positional.length > 0) {
+    return {
+      mode: "question",
+      question: positional.join(" "),
+      noThinking,
+      modelOverride,
+    };
+  }
+
+  return { mode: "no-args", noThinking, modelOverride };
 }
 
 export function printHelp(): void {
@@ -32,6 +55,7 @@ export function printHelp(): void {
 Usage:
   btw <question>          Ask a question
   btw                     Open multiline input
+  btw connect             Set up AI provider and API key
   btw --help              Show this message
   btw --version           Print version
 

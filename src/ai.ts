@@ -1,4 +1,6 @@
 import { stream, getModel, type Model } from "@earendil-works/pi-ai";
+import { readConfig } from "@/config";
+import { getApiKey } from "@/auth";
 
 export interface StreamEvent {
   type: "text" | "thinking";
@@ -11,13 +13,15 @@ export interface ModelConfig {
   apiKey: string;
 }
 
-const DEFAULT_PROVIDER = "openai";
+const DEFAULT_PROVIDER = "github-copilot";
 const DEFAULT_MODEL = "gpt-4o-mini";
 
-export function getModelConfig(): ModelConfig {
-  const provider = process.env.BTW_PROVIDER ?? DEFAULT_PROVIDER;
-  const model = process.env.BTW_MODEL ?? DEFAULT_MODEL;
-  const apiKey = process.env.BTW_API_KEY ?? "";
+export async function getModelConfig(): Promise<ModelConfig> {
+  const cfg = await readConfig();
+
+  const provider = cfg?.provider ?? DEFAULT_PROVIDER;
+  const model = cfg?.model ?? DEFAULT_MODEL;
+  const apiKey = (await getApiKey(provider)) ?? "";
 
   return { provider, model, apiKey };
 }

@@ -3,8 +3,15 @@
   "version": "0.1.0",
   "module": "index.ts",
   "type": "module",
+  "bin": {
+    "btw": "dist/index.js",
+    "qq": "dist/index.js",
+    "q": "dist/index.js"
+  },
   "scripts": {
-    "btw": "bun index.ts",
+    "dev": "bun src/index.ts",
+    "btw": "bun src/index.ts",
+    "build": "bun build --minify --target node --outdir dist src/index.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "test": "bun test",
