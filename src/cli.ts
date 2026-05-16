@@ -32,6 +32,7 @@ export type ParsedArgs =
   | { mode: "help" }
   | { mode: "version" }
   | { mode: "connect" }
+  | { mode: "model" }
   | { mode: "no-args"; noThinking: boolean; modelOverride?: string }
   | { mode: "question"; question: string; noThinking: boolean; modelOverride?: string };
 
@@ -93,6 +94,7 @@ export function parseArgs(argv: string[]): Result<ParsedArgs, CliError> {
   const positional = buildPositional(args, modelResult.value);
 
   if (positional[0] === "connect") return ok({ mode: "connect" });
+  if (positional[0] === "model") return ok({ mode: "model" });
 
   if (positional.length > 0) {
     return ok({
