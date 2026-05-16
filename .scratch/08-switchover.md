@@ -1,6 +1,6 @@
 # 08 — Switchover: index.ts rewrite + cleanup
 
-**Status:** pending
+**Status:** done
 
 ## Detail
 
@@ -31,7 +31,7 @@ Imports from:
 - `@/lib/config` (not old `@/config`)
 - `@/lib/auth` (not old `@/auth`)
 - `@/lib/ai` (not old `@/ai`)
-- `@/lib/question`
+- `@/cmd/question` (moved from lib/ since it's pure orchestration/IO)
 - `@/cmd/connect`
 - `@/cli`
 - `@/input`
