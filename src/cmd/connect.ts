@@ -30,7 +30,7 @@ export class ConnectError extends Error {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function connectFlow(auth: AuthService): Promise<Result<void, ConnectError>> {
+export async function connectCmd(auth: AuthService): Promise<Result<void, ConnectError>> {
   intro("Connect to an AI provider");
 
   const providers = getProviders();

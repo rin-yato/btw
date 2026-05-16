@@ -35,7 +35,7 @@ async function resolveQuestion(question?: string): Promise<string | undefined> {
   return result.value;
 }
 
-export async function askQuestion(
+export async function questionCmd(
   noThinking: boolean,
   modelOverride: string | undefined,
   question?: string,

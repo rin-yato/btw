@@ -7,8 +7,8 @@ import { isErr } from "@justmiracle/result";
 import pc from "picocolors";
 
 import { parseArgs, printHelp, printVersion } from "@/cli";
-import { connectFlow } from "@/cmd/connect";
-import { askQuestion } from "@/cmd/question";
+import { connectCmd } from "@/cmd/connect";
+import { questionCmd } from "@/cmd/question";
 import { formatError } from "@/error";
 
 async function run(): Promise<void> {
@@ -30,7 +30,7 @@ async function run(): Promise<void> {
       return;
     case "connect": {
       const auth = new AuthService(new JsonStore({ dir: getAuthDir(), filename: "auth.json" }));
-      const result = await connectFlow(auth);
+      const result = await connectCmd(auth);
       if (isErr(result)) {
         process.stderr.write(`\n${pc.red("Error:")} ${formatError(result.error)}\n`);
         process.exit(1);
@@ -38,10 +38,10 @@ async function run(): Promise<void> {
       return;
     }
     case "no-args":
-      await askQuestion(parsed.noThinking, parsed.modelOverride);
+      await questionCmd(parsed.noThinking, parsed.modelOverride);
       return;
     case "question":
-      await askQuestion(parsed.noThinking, parsed.modelOverride, parsed.question);
+      await questionCmd(parsed.noThinking, parsed.modelOverride, parsed.question);
       return;
   }
 }
