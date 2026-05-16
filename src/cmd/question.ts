@@ -28,21 +28,11 @@ export async function readQuestion(): Promise<Result<string, void>> {
   return ok(question);
 }
 
-async function resolveQuestion(question?: string): Promise<string | undefined> {
-  if (question) return question;
-  const result = await readQuestion();
-  if (isErr(result)) return undefined;
-  return result.value;
-}
-
-export async function questionCmd(
+async function streamAnswer(
+  question: string,
   noThinking: boolean,
-  modelOverride: string | undefined,
-  question?: string,
+  modelOverride?: string,
 ): Promise<void> {
-  const q = await resolveQuestion(question);
-  if (!q) return;
-
   const configService = new ConfigService(
     new JsonStore({ dir: getConfigDir(), filename: "config.json" }),
   );
@@ -68,7 +58,7 @@ export async function questionCmd(
   const controller = new AbortController();
   process.on("SIGINT", () => controller.abort());
 
-  const stream = ai.streamQuestion(q, modelResult.value, {
+  const stream = ai.streamQuestion(question, modelResult.value, {
     signal: controller.signal,
   });
 
@@ -90,4 +80,21 @@ export async function questionCmd(
   }
 
   process.stdout.write("\n");
+}
+
+export async function questionCmd(
+  noThinking: boolean,
+  modelOverride: string | undefined,
+  question: string,
+): Promise<void> {
+  await streamAnswer(question, noThinking, modelOverride);
+}
+
+export async function promptCmd(
+  noThinking: boolean,
+  modelOverride: string | undefined,
+): Promise<void> {
+  const questionResult = await readQuestion();
+  if (isErr(questionResult)) return;
+  await streamAnswer(questionResult.value, noThinking, modelOverride);
 }

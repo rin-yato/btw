@@ -8,7 +8,7 @@ import pc from "picocolors";
 
 import { parseArgs, printHelp, printVersion } from "@/cli";
 import { connectCmd } from "@/cmd/connect";
-import { questionCmd } from "@/cmd/question";
+import { promptCmd, questionCmd } from "@/cmd/question";
 import { formatError } from "@/error";
 
 async function run(): Promise<void> {
@@ -38,7 +38,7 @@ async function run(): Promise<void> {
       return;
     }
     case "no-args":
-      await questionCmd(parsed.noThinking, parsed.modelOverride);
+      await promptCmd(parsed.noThinking, parsed.modelOverride);
       return;
     case "question":
       await questionCmd(parsed.noThinking, parsed.modelOverride, parsed.question);
