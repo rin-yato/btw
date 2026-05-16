@@ -61,7 +61,10 @@ describe("getModelConfig", () => {
 
   test("reads provider and model from config", async () => {
     await ai.config.writeConfig(
-      mergeObjects(getDefaults(), { model: "anthropic:claude-sonnet-4-20250514" }),
+      mergeObjects(getDefaults(), {
+        model: "anthropic:claude-sonnet-4-20250514",
+        showThinking: true,
+      }),
     );
     await ai.auth.setApiKey("anthropic", "sk-ant-key");
 

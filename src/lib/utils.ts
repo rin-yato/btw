@@ -1,6 +1,4 @@
-export function mergeObjects<T extends Record<string, unknown>>(
-  ...objects: (Partial<T> | undefined | null)[]
-): T {
+export function mergeObjects<T extends object>(...objects: (object | undefined | null)[]): T {
   return Object.assign({}, ...objects) as T;
 }
 

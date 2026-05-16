@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { isErr } from "@justmiracle/result";
 import pc from "picocolors";
 
 import { getModelConfig, streamQuestion } from "@/ai";
@@ -48,7 +49,14 @@ async function handleQuestion(
 }
 
 async function run(): Promise<void> {
-  const parsed = parseArgs(process.argv);
+  const parsedResult = parseArgs(process.argv);
+
+  if (isErr(parsedResult)) {
+    process.stderr.write(`\n${pc.red("Error:")} ${formatError(parsedResult.error)}\n`);
+    process.exit(1);
+  }
+
+  const parsed = parsedResult.value;
 
   switch (parsed.mode) {
     case "help":
@@ -70,7 +78,7 @@ async function run(): Promise<void> {
       return;
     }
     case "question": {
-      await handleQuestion(parsed.question!, parsed.noThinking, parsed.modelOverride);
+      await handleQuestion(parsed.question, parsed.noThinking, parsed.modelOverride);
       return;
     }
   }

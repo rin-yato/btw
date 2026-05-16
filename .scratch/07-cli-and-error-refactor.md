@@ -1,6 +1,6 @@
 # 07 — CLI and error refactor
 
-**Status:** pending
+**Status:** done
 
 ## Detail
 
@@ -68,11 +68,16 @@ Dispatch order:
 
 ### Acceptance criteria
 
-- [ ] `parseArgs` returns `Result<ParsedArgs, CliError>` — no thrown exceptions
-- [ ] `--model openai:gpt-4o-mini` parses to `modelOverride: "openai:gpt-4o-mini"`
-- [ ] `--model` without value returns `err(CliError)` with reason `"missing-value"`
-- [ ] `--model openai` (no colon) returns `err(CliError)` with reason `"invalid-flag"`
-- [ ] Help text shows `--model <provider:model>`
-- [ ] `formatError(err instanceof AiError)` returns correct user-friendly message based on reason
-- [ ] `formatError(unknown error)` falls back to `String(err)`
-- [ ] `bun test` passes
+- [x] `parseArgs` returns `Result<ParsedArgs, CliError>` — no thrown exceptions
+- [x] `--model openai:gpt-4o-mini` parses to `modelOverride: "openai:gpt-4o-mini"`
+- [x] `--model` without value returns `err(CliError)` with reason `"missing-value"`
+- [x] `--model openai` (no colon) returns `err(CliError)` with reason `"invalid-flag"`
+- [x] Help text shows `--model <provider:model>`
+- [x] `formatError(err instanceof AiError)` returns correct user-friendly message based on reason
+- [x] `formatError(unknown error)` falls back to `String(err)`
+- [x] `bun test` passes
+
+### Notes
+- No `AuthError` or `QuestionError` in codebase — dispatch order: `JsonStoreError` → `ConfigError` → `AiError` → `CliError` → fallback
+- Non-null assertions in `cli.ts` replaced with `=== undefined` guards
+- `index.ts` now unwraps `Result` from `parseArgs` and exits on error

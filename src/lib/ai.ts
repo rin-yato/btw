@@ -112,8 +112,8 @@ function resolveModel(provider: string, model: string): Result<Model<never>, AiE
 
 export class AiService {
   constructor(
-    private config: ConfigService,
-    private auth: AuthService,
+    readonly config: ConfigService,
+    readonly auth: AuthService,
   ) {}
 
   async getModelConfig(
