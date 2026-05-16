@@ -4,14 +4,12 @@ import { ConfigService, getConfigDir } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
-import { isErr } from "@justmiracle/result";
+import { err, isErr, ok, type Result } from "@justmiracle/result";
 import pc from "picocolors";
 
 import { formatError } from "@/error";
 
-export const CANCEL = Symbol("cancel");
-
-export async function readQuestion(): Promise<string | typeof CANCEL> {
+export async function readQuestion(): Promise<Result<string, void>> {
   const question = await multiline({
     message: "Ask a question",
     placeholder: "Type your question…  (double Enter to submit)",
@@ -24,17 +22,27 @@ export async function readQuestion(): Promise<string | typeof CANCEL> {
 
   if (isCancel(question)) {
     cancel("Cancelled");
-    return CANCEL;
+    return err(undefined);
   }
 
-  return question;
+  return ok(question);
+}
+
+async function resolveQuestion(question?: string): Promise<string | undefined> {
+  if (question) return question;
+  const result = await readQuestion();
+  if (isErr(result)) return undefined;
+  return result.value;
 }
 
 export async function askQuestion(
-  question: string,
   noThinking: boolean,
-  modelOverride?: string,
+  modelOverride: string | undefined,
+  question?: string,
 ): Promise<void> {
+  const q = await resolveQuestion(question);
+  if (!q) return;
+
   const configService = new ConfigService(
     new JsonStore({ dir: getConfigDir(), filename: "config.json" }),
   );
@@ -60,7 +68,7 @@ export async function askQuestion(
   const controller = new AbortController();
   process.on("SIGINT", () => controller.abort());
 
-  const stream = ai.streamQuestion(question, modelResult.value, {
+  const stream = ai.streamQuestion(q, modelResult.value, {
     signal: controller.signal,
   });
 

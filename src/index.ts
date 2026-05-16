@@ -8,7 +8,7 @@ import pc from "picocolors";
 
 import { parseArgs, printHelp, printVersion } from "@/cli";
 import { connectFlow } from "@/cmd/connect";
-import { askQuestion, CANCEL, readQuestion } from "@/cmd/question";
+import { askQuestion } from "@/cmd/question";
 import { formatError } from "@/error";
 
 async function run(): Promise<void> {
@@ -37,14 +37,11 @@ async function run(): Promise<void> {
       }
       return;
     }
-    case "no-args": {
-      const question = await readQuestion();
-      if (question === CANCEL) process.exit(0);
-      await askQuestion(question, parsed.noThinking, parsed.modelOverride);
+    case "no-args":
+      await askQuestion(parsed.noThinking, parsed.modelOverride);
       return;
-    }
     case "question":
-      await askQuestion(parsed.question, parsed.noThinking, parsed.modelOverride);
+      await askQuestion(parsed.noThinking, parsed.modelOverride, parsed.question);
       return;
   }
 }
