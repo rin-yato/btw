@@ -15,7 +15,7 @@ async function run(): Promise<void> {
   const parsedResult = parseArgs(process.argv);
 
   if (isErr(parsedResult)) {
-    process.stderr.write(`\n${pc.red("Error:")} ${formatError(parsedResult.error)}\n`);
+    process.stderr.write(`\n${pc.red("Error:")} ${parsedResult.error.message}\n`);
     process.exit(1);
   }
 
@@ -48,4 +48,8 @@ async function run(): Promise<void> {
   }
 }
 
-void run();
+await run().catch((e) => {
+  // Unhandled errors
+  console.error(`Unknown error: ${String(e)}`);
+  process.exit(1);
+});
