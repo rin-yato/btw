@@ -64,11 +64,11 @@ export function getConfigPath(): string {
 export class ConfigService {
   constructor(private store: JsonStore) {}
 
-  async readConfig(): Promise<Result<ConfigSchema | null, ConfigError | JsonStoreError>> {
+  async readConfig(): Promise<Result<ConfigSchema, ConfigError | JsonStoreError>> {
     const result = await this.store.read();
 
     if (isErr(result)) {
-      if (result.error.reason === "not-found") return ok(null);
+      if (result.error.reason === "not-found") return ok(getDefaults());
       return result;
     }
 

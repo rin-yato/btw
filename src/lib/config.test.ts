@@ -55,11 +55,11 @@ describe("configExists", () => {
 });
 
 describe("readConfig", () => {
-  test("returns ok(null) when no config file", async () => {
+  test("returns ok(defaults) when no config file", async () => {
     const result = await config.readConfig();
     expect(isOk(result)).toBe(true);
     if (isOk(result)) {
-      expect(result.value).toBeNull();
+      expect(result.value).toEqual(getDefaults());
     }
   });
 
