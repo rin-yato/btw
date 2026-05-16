@@ -1,6 +1,6 @@
 import { AiService } from "@/lib/ai";
-import { AuthService, getAuthDir } from "@/lib/auth";
-import { ConfigService, getConfigDir } from "@/lib/config";
+import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
+import { CONFIG_FILENAME, ConfigService, getConfigDir } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
@@ -34,10 +34,10 @@ async function streamAnswer(
   modelOverride?: string,
 ): Promise<void> {
   const configService = new ConfigService(
-    new JsonStore({ dir: getConfigDir(), filename: "config.json" }),
+    new JsonStore({ dir: getConfigDir(), filename: CONFIG_FILENAME }),
   );
   const authService = new AuthService(
-    new JsonStore({ dir: getAuthDir(), filename: "auth.json" }),
+    new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }),
   );
   const ai = new AiService(configService, authService);
 

@@ -9,6 +9,8 @@ import * as v from "valibot";
 
 const AuthMapSchema = v.record(v.string(), v.string());
 
+export const AUTH_FILENAME = "auth.json";
+
 export function getAuthDir(): string {
   const xdg = process.env.XDG_CACHE_HOME;
   if (xdg) return join(xdg, "btw");
@@ -16,7 +18,7 @@ export function getAuthDir(): string {
 }
 
 export function getAuthPath(): string {
-  return join(getAuthDir(), "auth.json");
+  return join(getAuthDir(), AUTH_FILENAME);
 }
 
 export class AuthService {

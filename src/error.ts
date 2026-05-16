@@ -3,6 +3,7 @@ import { ConfigError } from "@/lib/config";
 import { JsonStoreError } from "@/lib/json-store";
 
 import { CliError } from "@/cli";
+import { ConnectError } from "@/cmd/connect";
 
 export function formatError(err: unknown): string {
   if (err instanceof JsonStoreError) {
@@ -30,6 +31,10 @@ export function formatError(err: unknown): string {
       default:
         return err.message;
     }
+  }
+
+  if (err instanceof ConnectError) {
+    return err.message;
   }
 
   if (err instanceof CliError) {

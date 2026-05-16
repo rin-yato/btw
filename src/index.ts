@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { AuthService, getAuthDir } from "@/lib/auth";
+import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
 import { JsonStore } from "@/lib/json-store";
 
 import { isErr } from "@justmiracle/result";
@@ -29,7 +29,9 @@ async function run(): Promise<void> {
       printVersion();
       return;
     case "connect": {
-      const auth = new AuthService(new JsonStore({ dir: getAuthDir(), filename: "auth.json" }));
+      const auth = new AuthService(
+        new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }),
+      );
       const result = await connectCmd(auth);
       if (isErr(result)) {
         process.stderr.write(`\n${pc.red("Error:")} ${formatError(result.error)}\n`);

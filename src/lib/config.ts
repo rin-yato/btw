@@ -51,6 +51,8 @@ export function getDefaults(): ConfigSchema {
   return { ...DEFAULTS };
 }
 
+export const CONFIG_FILENAME = "config.json";
+
 export function getConfigDir(): string {
   const xdg = process.env.XDG_CONFIG_HOME;
   if (xdg) return join(xdg, "btw");
@@ -58,7 +60,7 @@ export function getConfigDir(): string {
 }
 
 export function getConfigPath(): string {
-  return join(getConfigDir(), "config.json");
+  return join(getConfigDir(), CONFIG_FILENAME);
 }
 
 export class ConfigService {

@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { ConfigService, getDefaults } from "@/lib/config";
+import { CONFIG_FILENAME, ConfigService, getDefaults } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
 
 import { isErr, isOk } from "@justmiracle/result";
@@ -14,7 +14,7 @@ let tmpDir: string;
 
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), "config-test-"));
-  const store = new JsonStore({ dir: tmpDir, filename: "config.json" });
+  const store = new JsonStore({ dir: tmpDir, filename: CONFIG_FILENAME });
   config = new ConfigService(store);
 });
 
@@ -80,7 +80,7 @@ describe("readConfig", () => {
   });
 
   test("returns err(parse) on invalid JSON", async () => {
-    writeFileSync(join(tmpDir, "config.json"), "not-valid-json");
+    writeFileSync(join(tmpDir, CONFIG_FILENAME), "not-valid-json");
 
     const result = await config.readConfig();
     expect(isErr(result)).toBe(true);
@@ -90,7 +90,7 @@ describe("readConfig", () => {
   });
 
   test("returns err(invalid-schema) when fields are missing", async () => {
-    const store = new JsonStore({ dir: tmpDir, filename: "config.json" });
+    const store = new JsonStore({ dir: tmpDir, filename: CONFIG_FILENAME });
     await store.write({});
 
     const result = await config.readConfig();
@@ -102,7 +102,7 @@ describe("readConfig", () => {
   });
 
   test("returns err(invalid-schema) when fields have wrong types", async () => {
-    const store = new JsonStore({ dir: tmpDir, filename: "config.json" });
+    const store = new JsonStore({ dir: tmpDir, filename: CONFIG_FILENAME });
     await store.write({ model: 42, showThinking: true });
 
     const result = await config.readConfig();
@@ -114,7 +114,7 @@ describe("readConfig", () => {
   });
 
   test("returns err(invalid-schema) when model lacks provider:pattern", async () => {
-    const store = new JsonStore({ dir: tmpDir, filename: "config.json" });
+    const store = new JsonStore({ dir: tmpDir, filename: CONFIG_FILENAME });
     await store.write({ model: "gpt-4o-mini", showThinking: true });
 
     const result = await config.readConfig();

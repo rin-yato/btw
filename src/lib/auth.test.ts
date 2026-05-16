@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { AuthService } from "@/lib/auth";
+import { AUTH_FILENAME, AuthService } from "@/lib/auth";
 import { JsonStore } from "@/lib/json-store";
 
 import { isErr, isOk } from "@justmiracle/result";
@@ -14,7 +14,7 @@ let tmpDir: string;
 
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), "auth-test-"));
-  const store = new JsonStore({ dir: tmpDir, filename: "auth.json" });
+  const store = new JsonStore({ dir: tmpDir, filename: AUTH_FILENAME });
   auth = new AuthService(store);
 });
 
@@ -78,7 +78,7 @@ describe("setApiKey", () => {
   });
 
   test("returns err on write failure", async () => {
-    const badStore = new JsonStore({ dir: "/dev/null/btw", filename: "auth.json" });
+    const badStore = new JsonStore({ dir: "/dev/null/btw", filename: AUTH_FILENAME });
     const badAuth = new AuthService(badStore);
 
     const result = await badAuth.setApiKey("openai", "sk-value");

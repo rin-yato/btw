@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { AiService } from "@/lib/ai";
-import { AuthService } from "@/lib/auth";
-import { ConfigService, getDefaults } from "@/lib/config";
+import { AUTH_FILENAME, AuthService } from "@/lib/auth";
+import { CONFIG_FILENAME, ConfigService, getDefaults } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
 import { mergeObjects } from "@/lib/utils";
 
@@ -41,8 +41,8 @@ let tmpDir: string;
 
 beforeEach(() => {
   tmpDir = mkdtempSync(join(tmpdir(), "ai-test-"));
-  const configStore = new JsonStore({ dir: tmpDir, filename: "config.json" });
-  const authStore = new JsonStore({ dir: tmpDir, filename: "auth.json" });
+  const configStore = new JsonStore({ dir: tmpDir, filename: CONFIG_FILENAME });
+  const authStore = new JsonStore({ dir: tmpDir, filename: AUTH_FILENAME });
   ai = new AiService(new ConfigService(configStore), new AuthService(authStore));
 });
 
