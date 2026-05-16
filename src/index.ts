@@ -8,9 +8,8 @@ import pc from "picocolors";
 
 import { parseArgs, printHelp, printVersion } from "@/cli";
 import { connectFlow } from "@/cmd/connect";
-import { askQuestion } from "@/cmd/question";
+import { askQuestion, CANCEL, readQuestion } from "@/cmd/question";
 import { formatError } from "@/error";
-import { CANCEL, readQuestion } from "@/input";
 
 async function run(): Promise<void> {
   const parsedResult = parseArgs(process.argv);
