@@ -7,8 +7,6 @@ import { cancel, isCancel, multiline } from "@clack/prompts";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 import pc from "picocolors";
 
-import { formatError } from "@/error";
-
 export async function readQuestion(): Promise<Result<string, void>> {
   const question = await multiline({
     message: "Ask a question",
@@ -43,7 +41,7 @@ async function streamAnswer(
 
   const configResult = await configService.readConfig();
   if (isErr(configResult)) {
-    process.stderr.write(`\n${pc.red("Error:")} ${formatError(configResult.error)}\n`);
+    process.stderr.write(`\n${pc.red("Error:")} ${configResult.error.message}\n`);
     process.exit(1);
   }
 
@@ -51,7 +49,7 @@ async function streamAnswer(
 
   const modelResult = await ai.getModelConfig(modelOverride);
   if (isErr(modelResult)) {
-    process.stderr.write(`\n${pc.red("Error:")} ${formatError(modelResult.error)}\n`);
+    process.stderr.write(`\n${pc.red("Error:")} ${modelResult.error.message}\n`);
     process.exit(1);
   }
 
@@ -68,7 +66,7 @@ async function streamAnswer(
         process.stdout.write("\n");
         return;
       }
-      process.stderr.write(`\n${pc.red("Error:")} ${formatError(event.error)}\n`);
+      process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
       process.exit(1);
     }
     if (event.type === "thinking" && !hideThinking) {

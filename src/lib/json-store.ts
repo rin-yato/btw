@@ -6,11 +6,11 @@ import { type Err, err, ok, type Result } from "@justmiracle/result";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 const REASON_MESSAGES = {
-  "not-found": "File not found",
-  parse: "Failed to parse JSON",
-  permission: "Permission denied",
-  write: "Failed to write file",
-  read: "Failed to read file",
+  "not-found": "Configuration file error: File not found",
+  parse: "Configuration file error: Failed to parse JSON",
+  permission: "Configuration file error: Permission denied",
+  write: "Configuration file error: Failed to write file",
+  read: "Configuration file error: Failed to read file",
 } as const;
 
 type JsonStoreErrorReason = keyof typeof REASON_MESSAGES;

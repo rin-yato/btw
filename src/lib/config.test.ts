@@ -25,7 +25,6 @@ afterEach(() => {
 describe("getDefaults", () => {
   test("returns the default config", () => {
     expect(getDefaults()).toEqual({
-      model: "openai:gpt-4o-mini",
       showThinking: true,
     });
   });

@@ -9,7 +9,7 @@ import { err, isErr, ok, type Result } from "@justmiracle/result";
 import * as v from "valibot";
 
 const ConfigValidator = v.object({
-  model: ModelStringSchema,
+  model: v.optional(ModelStringSchema),
   showThinking: v.boolean(),
 });
 
@@ -18,7 +18,7 @@ export type ConfigSchema = v.InferOutput<typeof ConfigValidator>;
 ////////////////////////////////////////////////////////////////////////////////
 
 const REASON_MESSAGES = {
-  "invalid-schema": "Config file has invalid data",
+  "invalid-schema": "Configuration error: Config file has invalid data",
 } as const;
 
 type ConfigErrorReason = keyof typeof REASON_MESSAGES;
@@ -43,7 +43,6 @@ export class ConfigError extends Error {
 ////////////////////////////////////////////////////////////////////////////////
 
 const DEFAULTS: ConfigSchema = {
-  model: "openai:gpt-4o-mini",
   showThinking: true,
 };
 

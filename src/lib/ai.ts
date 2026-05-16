@@ -9,12 +9,13 @@ import { err, isErr, makeSafe, ok, type Result } from "@justmiracle/result";
 ////////////////////////////////////////////////////////////////////////////////////
 const REASON_MESSAGES = {
   "api-error": "API request failed",
-  authentication: "No API key available",
-  quota: "API quota exceeded",
-  "rate-limit": "Rate limit exceeded",
-  timeout: "Request timed out",
-  network: "Network error",
-  "model-not-found": "Model is not available",
+  authentication: "Authentication failed. Check your API key is correct.",
+  quota: "API quota exceeded. Check your billing plan or try a different provider.",
+  "rate-limit": "Rate limited. Wait a moment and try again.",
+  timeout: "Request timed out. The model took too long to respond.",
+  network: "Network error. Check your internet connection and try again.",
+  "model-not-found": "Model not found. Check the model name is correct.",
+  "no-model": "No model configured. Use `btw model` to set up a model first.",
 } as const;
 
 export type AiReason = keyof typeof REASON_MESSAGES;
@@ -141,6 +142,15 @@ export class AiService {
     override?: string,
   ): Result<ParsedModel, AiError> {
     const modelString = override ?? config.model;
+
+    if (!modelString) {
+      return err(
+        new AiError({
+          reason: "no-model",
+          message: REASON_MESSAGES["no-model"],
+        }),
+      );
+    }
 
     const parsed = parseModelString(modelString);
     if (isErr(parsed)) {

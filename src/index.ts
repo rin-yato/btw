@@ -1,15 +1,11 @@
 #!/usr/bin/env node
 
-import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
-import { JsonStore } from "@/lib/json-store";
-
 import { isErr } from "@justmiracle/result";
 import pc from "picocolors";
 
 import { parseArgs, printHelp, printVersion } from "@/cli";
 import { connectCmd } from "@/cmd/connect";
 import { promptCmd, questionCmd } from "@/cmd/question";
-import { formatError } from "@/error";
 
 async function run(): Promise<void> {
   const parsedResult = parseArgs(process.argv);
@@ -28,17 +24,9 @@ async function run(): Promise<void> {
     case "version":
       printVersion();
       return;
-    case "connect": {
-      const auth = new AuthService(
-        new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }),
-      );
-      const result = await connectCmd(auth);
-      if (isErr(result)) {
-        process.stderr.write(`\n${pc.red("Error:")} ${formatError(result.error)}\n`);
-        process.exit(1);
-      }
+    case "connect":
+      await connectCmd();
       return;
-    }
     case "no-args":
       await promptCmd(parsed.noThinking, parsed.modelOverride);
       return;
@@ -49,7 +37,6 @@ async function run(): Promise<void> {
 }
 
 await run().catch((e) => {
-  // Unhandled errors
-  console.error(`Unknown error: ${String(e)}`);
+  process.stderr.write(`\n${pc.red("Unexpected error:")} ${String(e)}\n`);
   process.exit(1);
 });

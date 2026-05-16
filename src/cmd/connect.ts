@@ -1,9 +1,11 @@
-import type { AuthService } from "@/lib/auth";
+import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
+import { JsonStore } from "@/lib/json-store";
 import { capitalize } from "@/lib/utils";
 
 import { autocomplete, cancel, intro, isCancel, outro, password } from "@clack/prompts";
 import { getProviders } from "@earendil-works/pi-ai";
-import { err, isErr, ok, type Result } from "@justmiracle/result";
+import { isErr } from "@justmiracle/result";
+import pc from "picocolors";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 const REASON_MESSAGES = {
@@ -30,7 +32,13 @@ export class ConnectError extends Error {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function connectCmd(auth: AuthService): Promise<Result<void, ConnectError>> {
+function logError(error: ConnectError): void {
+  process.stderr.write(`\n${pc.red("Error:")} ${error.message}\n`);
+}
+
+export async function connectCmd(): Promise<void> {
+  const auth = new AuthService(new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }));
+
   intro("Connect to an AI provider");
 
   const providers = getProviders();
@@ -66,18 +74,17 @@ export async function connectCmd(auth: AuthService): Promise<Result<void, Connec
 
   const keyResult = await auth.setApiKey(selectedProvider, apiKey);
   if (isErr(keyResult)) {
-    return err(
+    logError(
       new ConnectError({
         reason: "store-error",
         message: REASON_MESSAGES["store-error"],
         cause: keyResult.error,
       }),
     );
+    process.exit(1);
   }
 
   outro(
     `Connected to ${capitalize(selectedProvider)}! You can now start using the models from this provider.`,
   );
-
-  return ok(undefined);
 }

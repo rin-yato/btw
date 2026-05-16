@@ -51,8 +51,16 @@ afterEach(() => {
 });
 
 describe("getModelConfig", () => {
-  test("resolves model from config defaults when no config file", async () => {
+  test("returns no-model error when no config file and no override", async () => {
     const result = await ai.getModelConfig();
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) {
+      expect(result.error.reason).toBe("no-model");
+    }
+  });
+
+  test("accepts an override even without a config file", async () => {
+    const result = await ai.getModelConfig("openai:gpt-4o-mini");
     expect(isErr(result)).toBe(true);
     if (isErr(result)) {
       expect(result.error.reason).toBe("authentication");
