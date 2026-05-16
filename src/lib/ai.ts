@@ -2,9 +2,10 @@ import type { AuthService } from "@/lib/auth";
 import type { ConfigError, ConfigSchema, ConfigService } from "@/lib/config";
 import type { JsonStoreError } from "@/lib/json-store";
 import { type ParsedModel, parseModelString } from "@/lib/model";
+import { ModelRegistry } from "@/lib/model-registry";
 
-import { getModel, type Model, stream } from "@earendil-works/pi-ai";
-import { err, isErr, makeSafe, ok, type Result } from "@justmiracle/result";
+import { type Model, stream } from "@earendil-works/pi-ai";
+import { err, isErr, ok, type Result } from "@justmiracle/result";
 
 ////////////////////////////////////////////////////////////////////////////////////
 const REASON_MESSAGES = {
@@ -83,9 +84,7 @@ export interface ModelConfig {
 }
 
 function resolveModel(provider: string, model: string): Result<Model<never>, AiError> {
-  const safeGetModel = makeSafe(getModel);
-
-  const resolved = safeGetModel(provider as never, model as never);
+  const resolved = new ModelRegistry().getModel(provider, model);
 
   if (isErr(resolved)) {
     return err(
@@ -93,16 +92,6 @@ function resolveModel(provider: string, model: string): Result<Model<never>, AiE
         reason: "model-not-found",
         message: REASON_MESSAGES["model-not-found"],
         cause: resolved.error,
-        meta: { provider, model },
-      }),
-    );
-  }
-
-  if (!resolved.value) {
-    return err(
-      new AiError({
-        reason: "model-not-found",
-        message: REASON_MESSAGES["model-not-found"],
         meta: { provider, model },
       }),
     );

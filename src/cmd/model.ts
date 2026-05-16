@@ -1,10 +1,10 @@
 import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
 import { CONFIG_FILENAME, ConfigService, getConfigDir } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
+import { ModelRegistry } from "@/lib/model-registry";
 import { capitalize } from "@/lib/utils";
 
 import { autocomplete, cancel, isCancel } from "@clack/prompts";
-import { getModels, getProviders } from "@earendil-works/pi-ai";
 import { isErr } from "@justmiracle/result";
 
 export async function modelCmd(): Promise<void> {
@@ -15,7 +15,8 @@ export async function modelCmd(): Promise<void> {
     new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }),
   );
 
-  const providers = getProviders();
+  const registry = new ModelRegistry();
+  const providers = registry.listProviders();
 
   const connected: string[] = [];
   for (const provider of providers) {
@@ -45,7 +46,7 @@ export async function modelCmd(): Promise<void> {
     process.exit(0);
   }
 
-  const models = getModels(selectedProvider as never);
+  const models = registry.listModels(selectedProvider);
 
   if (models.length === 0) {
     process.stderr.write("\nNo models available for this provider.\n");

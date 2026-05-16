@@ -1,9 +1,9 @@
 import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
 import { JsonStore } from "@/lib/json-store";
+import { ModelRegistry } from "@/lib/model-registry";
 import { capitalize } from "@/lib/utils";
 
 import { autocomplete, cancel, intro, isCancel, outro, password } from "@clack/prompts";
-import { getProviders } from "@earendil-works/pi-ai";
 import { isErr } from "@justmiracle/result";
 import pc from "picocolors";
 
@@ -41,7 +41,7 @@ export async function connectCmd(): Promise<void> {
 
   intro("Connect to an AI provider");
 
-  const providers = getProviders();
+  const providers = new ModelRegistry().listProviders();
   const providerOptions = providers.map((provider) => ({
     value: provider as string,
     label: capitalize(provider),
