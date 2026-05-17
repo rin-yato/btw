@@ -1,0 +1,23 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { MarkdownRenderer } from "@/lib/markdown";
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function main() {
+  const md = readFileSync(join(import.meta.dir, "sample.md"), "utf-8");
+
+  const renderer = new MarkdownRenderer();
+
+  for (const char of md) {
+    renderer.write(char);
+    await delay(8);
+  }
+
+  renderer.end();
+}
+
+main();
