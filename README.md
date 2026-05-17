@@ -8,50 +8,62 @@ AI answers in your terminal.
 # Install
 npm install -g btw
 
-# Set up an AI provider
+# Connect to a provider and store your API key
 btw connect
+
+# Pick a default model (required)
+btw model
 
 # Ask anything
 btw "what is 2+2"
-btw how do i update dep to latest with bun
+btw "how do I update a dep to latest with bun"
 ```
 
 ## Usage
 
 ```
-btw <question>         Ask a question
-btw                    Open multiline prompt
-btw connect            Configure AI provider + API key
-btw --help             Show help
-btw --version          Print version
-
-Options:
-  --no-thinking        Hide thinking/reasoning output
-  --model <provider/model>  Override model (e.g. openai/gpt-4o-mini)
+btw <question>          Ask a question (inline mode)
+btw                     Open multiline input (interactive mode)
+btw connect             Store an API key for a provider
+btw model               Set your default model
+btw --help              Show help
+btw --version           Print version
 ```
 
-### Model override
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--no-thinking` | Hide thinking/reasoning output |
+| `--model <provider:model>` | Override the model for this question |
+
+## Model override
+
+Run any question with a different model, no reconfiguration needed:
 
 ```bash
-btw --model opencode:minimax-m2.5-free "explain quantum computing"
+btw --model opencode:deepseek-v4-flash-free "explain quantum computing"
 ```
 
-## Entrypoints
+## Setup
 
-`btw`, `qq`, and `q` all run the same tool — use whichever is shortest in the moment.
+1. **`btw connect`** — pick a provider and enter your API key. This stores a credential and makes that provider's models available.
+2. **`btw model`** — choose a default model from your connected providers.
 
-## Features
+After setup, just ask questions. Your default model is used automatically.
 
-- Single question, single answer — no threads, no sessions
-- Multi-line input when you run without arguments
-- Model thinking shown in dim text, or hide with `--no-thinking`
-- Works with any provider supported by `@earendil-works/pi-ai`
+## About
+
+**btw** is a single-question, single-answer CLI. No threads, no sessions — just a question and an answer, streamed to your terminal. Supports any provider from `@earendil-works/pi-ai`.
+
+The names `btw`, `qq`, and `q` all run the same tool — use whichever is shortest.
 
 ## Configuration
 
-| Data | Default path |
-|---|---|
-| Config | `~/.config/btw/config.json` |
+| Data | Path |
+|------|------|
+| Config (model, preferences) | `~/.config/btw/config.json` |
+| Credentials (API keys) | `~/.cache/btw/auth.json` |
 
 ## Development
 
