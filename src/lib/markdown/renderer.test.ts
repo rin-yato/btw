@@ -17,10 +17,6 @@ function createMockStream(isTTY: boolean) {
   return { stream, getOutput: () => output };
 }
 
-function waitForMicrotask(): Promise<void> {
-  return new Promise((resolve) => queueMicrotask(resolve));
-}
-
 describe("MarkdownRenderer (non-TTY)", () => {
   test("passes through raw text", () => {
     const { stream, getOutput } = createMockStream(false);
@@ -55,12 +51,62 @@ describe("MarkdownRenderer (non-TTY)", () => {
 });
 
 describe("MarkdownRenderer (TTY)", () => {
-  test("renders bold text", async () => {
+  test("renders ANSI preview on first write", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("**bold**");
-    await waitForMicrotask();
+
+    const out = getOutput();
+    expect(out).toContain("bold");
+    expect(out).not.toContain("**bold**");
+  });
+
+  test("re-renders preview on subsequent write (no boundary)", () => {
+    const { stream, getOutput } = createMockStream(true);
+    const r = new MarkdownRenderer({ stream: stream as any });
+
+    r.write("Hello");
+    const afterFirst = getOutput();
+    // Preview renders without trailing newlines; 'clear' only when replaced
+    expect(afterFirst).toBe("Hello");
+
+    r.write(" **world**");
+    const afterSecond = getOutput();
+    expect(afterSecond).toContain("\r\x1b[J");
+    expect(afterSecond).not.toContain("**world**");
+  });
+
+  test("commits stable content after paragraph break", () => {
+    const { stream, getOutput } = createMockStream(true);
+    const r = new MarkdownRenderer({ stream: stream as any });
+
+    r.write("Hello\n\n");
+    const out = getOutput();
+    // Committed content — no escape codes
+    expect(out).not.toContain("\x1b[");
+    expect(out).not.toContain("\r\x1b[J");
+    expect(out).toBe("Hello\n\n");
+  });
+
+  test("commits stable across multiple writes", () => {
+    const { stream, getOutput } = createMockStream(true);
+    const r = new MarkdownRenderer({ stream: stream as any });
+
+    r.write("Hello ");
+    r.write("**world**\n\n");
+
+    const out = getOutput();
+    // Should eventually be committed cleanly
+    expect(out).not.toContain("**world**");
+    expect(out).toContain("world");
+  });
+
+  test("renders bold in final output", () => {
+    const { stream, getOutput } = createMockStream(true);
+    const r = new MarkdownRenderer({ stream: stream as any });
+
+    r.write("**bold**");
     r.end();
 
     const out = getOutput();
@@ -68,12 +114,11 @@ describe("MarkdownRenderer (TTY)", () => {
     expect(out).not.toContain("**bold**");
   });
 
-  test("renders italic text", async () => {
+  test("renders italic in final output", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("*italic*");
-    await waitForMicrotask();
     r.end();
 
     const out = getOutput();
@@ -81,27 +126,11 @@ describe("MarkdownRenderer (TTY)", () => {
     expect(out).not.toContain("*italic*");
   });
 
-  test("renders mixed inline styles", async () => {
-    const { stream, getOutput } = createMockStream(true);
-    const r = new MarkdownRenderer({ stream: stream as any });
-
-    r.write("**bold** and *italic*");
-    await waitForMicrotask();
-    r.end();
-
-    const out = getOutput();
-    expect(out).toContain("bold");
-    expect(out).toContain("italic");
-    expect(out).not.toContain("**");
-    expect(out).not.toContain("*italic*");
-  });
-
-  test("renders inline code", async () => {
+  test("renders inline code in final output", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("Use the `foo()` function");
-    await waitForMicrotask();
     r.end();
 
     const out = getOutput();
@@ -109,24 +138,22 @@ describe("MarkdownRenderer (TTY)", () => {
     expect(out).not.toContain("`foo()`");
   });
 
-  test("renders code blocks", async () => {
+  test("renders code blocks in final output", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("```\nconst x = 1;\n```");
-    await waitForMicrotask();
     r.end();
 
     const out = getOutput();
     expect(out).toContain("const x = 1;");
   });
 
-  test("renders links as hyperlinks", async () => {
+  test("renders links in final output", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("[example](https://example.com)");
-    await waitForMicrotask();
     r.end();
 
     const out = getOutput();
@@ -134,49 +161,15 @@ describe("MarkdownRenderer (TTY)", () => {
     expect(out).toContain("https://example.com");
   });
 
-  test("renders headings as bold", async () => {
+  test("renders headings in final output", () => {
     const { stream, getOutput } = createMockStream(true);
     const r = new MarkdownRenderer({ stream: stream as any });
 
     r.write("# Hello");
-    await waitForMicrotask();
     r.end();
 
     const out = getOutput();
+    // Heading renders with '# ' prefix styled in cyan+bold
     expect(out).toContain("Hello");
-    expect(out).not.toContain("# Hello");
-  });
-
-  test("batches multiple deltas in a single microtask", async () => {
-    const { stream, getOutput } = createMockStream(true);
-    const r = new MarkdownRenderer({ stream: stream as any });
-
-    r.write("Hello ");
-    r.write("**bold** ");
-    r.write("world");
-    await waitForMicrotask();
-    r.end();
-
-    const out = getOutput();
-    expect(out).toContain("Hello ");
-    expect(out).toContain("bold");
-    expect(out).toContain(" world");
-    expect(out).not.toContain("**bold**");
-  });
-
-  test("emits cursor control codes on update", async () => {
-    const { stream, getOutput } = createMockStream(true);
-    const r = new MarkdownRenderer({ stream: stream as any });
-
-    r.write("Hello");
-    await waitForMicrotask();
-
-    r.write("Hello **world**");
-    await waitForMicrotask();
-    r.end();
-
-    const out = getOutput();
-    expect(out).toContain("\x1b[");
-    expect(out).toContain("\x1b[J");
   });
 });

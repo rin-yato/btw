@@ -14,7 +14,7 @@ async function main() {
 
   for (const char of md) {
     renderer.write(char);
-    await delay(8);
+    await delay(10);
   }
 
   renderer.end();
