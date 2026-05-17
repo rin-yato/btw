@@ -28,6 +28,7 @@
     "@clack/prompts": "^1.4.0",
     "@earendil-works/pi-agent-core": "^0.74.0",
     "@justmiracle/result": "^2.0.0",
+    "cli-highlight": "^2.1.11",
     "marked": "^18.0.3",
     "picocolors": "^1.1.1",
     "remeda": "^2.34.1",

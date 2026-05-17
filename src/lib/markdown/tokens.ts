@@ -1,8 +1,12 @@
+import { isOk, makeSafe } from "@justmiracle/result";
+import { highlight, supportsLanguage } from "cli-highlight";
 import type { Token, Tokens } from "marked";
-import { dropWhile, flatMap, join, map, pipe, reverse } from "remeda";
+import { dropWhile, join, map, pipe, reverse } from "remeda";
 import wrapAnsi from "wrap-ansi";
 
 import { applyStyle, defaultMarkdownTheme, type MarkdownTheme } from "./theme";
+
+const safeHighlight = makeSafe(highlight);
 
 function wrap(text: string, width: number, opts?: { hard?: boolean }): string[] {
   if (width <= 0) return [text];
@@ -11,12 +15,6 @@ function wrap(text: string, width: number, opts?: { hard?: boolean }): string[] 
     trim: true,
     wordWrap: true,
   }).split("\n");
-}
-
-function pushBlank(lines: string[]): void {
-  if (lines.length === 0 || lines[lines.length - 1] !== "") {
-    lines.push("");
-  }
 }
 
 function trimTrailingLines(lines: string[]): string[] {
@@ -45,68 +43,63 @@ export class TokenRenderer {
   }
 
   render(tokens: Token[]): string {
-    const lines = this.#renderTokens(tokens);
-    return trimTrailingLines(lines).join("\n");
+    return trimTrailingLines(this.#renderTokens(tokens)).join("\n");
   }
 
   #renderTokens(tokens: Token[]): string[] {
     const lines: string[] = [];
-
     for (const token of tokens) {
-      switch (token.type) {
-        case "space":
-          pushBlank(lines);
-          break;
-        case "heading":
-          this.#renderHeading(lines, token as Tokens.Heading);
-          break;
-        case "paragraph":
-          this.#renderParagraph(lines, token as Tokens.Paragraph);
-          break;
-        case "code":
-          this.#renderCode(lines, token as Tokens.Code);
-          break;
-        default:
-          if ("raw" in token) {
-            const raw = (token as Token & { raw: string }).raw.trim();
-            if (raw) {
-              lines.push(...wrap(raw, this.#width));
-              pushBlank(lines);
-            }
-          }
-          break;
-      }
+      lines.push(...this.#renderToken(token));
     }
-
     return lines;
   }
 
-  #renderHeading(lines: string[], token: Tokens.Heading): void {
+  #renderToken(token: Token): string[] {
+    switch (token.type) {
+      case "space":
+        return [];
+      case "heading":
+        return this.#renderHeading(token as Tokens.Heading);
+      case "paragraph":
+        return this.#renderParagraph(token as Tokens.Paragraph);
+      case "code":
+        return this.#renderCode(token as Tokens.Code);
+      default:
+        if ("raw" in token) {
+          const raw = (token as Token & { raw: string }).raw.trim();
+          if (raw) return [...wrap(raw, this.#width), ""];
+        }
+        return [];
+    }
+  }
+
+  #renderHeading(token: Tokens.Heading): string[] {
     const prefix = `${"#".repeat(token.depth)} `;
     const content = applyStyle(prefix + this.#renderInlines(token.tokens), this.#theme.heading);
-    lines.push(...wrap(content, this.#width));
-    pushBlank(lines);
+    return [...wrap(content, this.#width), ""];
   }
 
-  #renderParagraph(lines: string[], token: Tokens.Paragraph): void {
+  #renderParagraph(token: Tokens.Paragraph): string[] {
     const text = this.#renderInlines(token.tokens);
-    lines.push(...wrap(text, this.#width));
-    pushBlank(lines);
+    return [...wrap(text, this.#width), ""];
   }
 
-  #renderCode(lines: string[], token: Tokens.Code): void {
-    const borderStyle = applyStyle("```", this.#theme.codeBlock.border);
-    lines.push(borderStyle);
+  #renderCode(token: Tokens.Code): string[] {
+    const fenceOpen = applyStyle(`\`\`\`${token.lang ?? ""}`, this.#theme.codeBlock.border);
+    const highlighted = this.#highlightCode(token.text, token.lang);
+    const codeLines = highlighted.flatMap((line) => wrap(line, this.#width, { hard: true }));
+    const fenceClose = applyStyle("```", this.#theme.codeBlock.border);
+    return [fenceOpen, ...codeLines, fenceClose, ""];
+  }
 
-    lines.push(
-      ...pipe(
-        applyStyle(token.text, this.#theme.codeBlock).split("\n"),
-        flatMap((line) => wrap(line, this.#width, { hard: true })),
-      ),
-    );
-
-    lines.push(borderStyle);
-    pushBlank(lines);
+  #highlightCode(code: string, lang: string | undefined): string[] {
+    const result = safeHighlight(code, {
+      ignoreIllegals: true,
+      language: lang && supportsLanguage(lang) ? lang : undefined,
+    });
+    return isOk(result)
+      ? result.value.split("\n")
+      : applyStyle(code, this.#theme.codeBlock).split("\n");
   }
 
   #renderInlines(tokens: Token[] | undefined): string {
