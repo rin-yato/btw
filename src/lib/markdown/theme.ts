@@ -22,24 +22,61 @@ export type TextStyle = {
   underline?: boolean;
 };
 
+export type MarkStyle = TextStyle & {
+  mark: string;
+  width?: number | "full";
+};
+
 export type MarkdownTheme = {
   heading: TextStyle;
-  link: TextStyle;
+  link: TextStyle & {
+    url: TextStyle;
+  };
   inlineCode: TextStyle;
   codeBlock: TextStyle & { border: TextStyle };
+  quote: TextStyle & {
+    border: MarkStyle;
+  };
+  horizontalRule: MarkStyle;
+  list: {
+    bullet: MarkStyle;
+    ordered: TextStyle;
+  };
+  table: {
+    header: TextStyle;
+    border: TextStyle;
+  };
   strong: TextStyle;
   emphasis: TextStyle;
   deletion: TextStyle;
+  thinking: TextStyle & {
+    border: MarkStyle;
+  };
 };
 
 export const defaultMarkdownTheme: MarkdownTheme = {
   heading: { color: "cyan", bold: true },
-  link: { color: "blue" },
+  link: { color: "blue", url: { dim: true } },
   inlineCode: { color: "yellow" },
   codeBlock: { color: "green", border: { dim: true } },
+  quote: { italic: true, border: { mark: "▎ ", dim: true } },
+  horizontalRule: { mark: "-", dim: true, width: "full", color: "gray" },
+  list: {
+    bullet: { mark: "-", color: "cyan" },
+    ordered: { color: "cyan" },
+  },
+  table: {
+    header: { color: "cyan", bold: true },
+    border: { dim: true },
+  },
   strong: { color: "magenta", bold: true },
   emphasis: { color: "magenta", italic: true },
   deletion: { strikethrough: true },
+  thinking: {
+    color: "yellow",
+    dim: true,
+    border: { mark: "┃ ", dim: true, color: "yellow" },
+  },
 };
 
 export type RenderMarkdownOptions = {

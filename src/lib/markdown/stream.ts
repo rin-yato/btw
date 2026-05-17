@@ -1,13 +1,14 @@
 import { marked } from "marked";
 import { map, pipe, split, sum } from "remeda";
 
-import type { RenderMarkdownOptions } from "./theme";
-import { defaultMarkdownTheme } from "./theme";
+import type { MarkdownTheme, RenderMarkdownOptions } from "./theme";
+import { applyStyle, defaultMarkdownTheme } from "./theme";
 import { TokenRenderer } from "./tokens";
 
 const ESC = String.fromCharCode(27);
 const RE_ANSI = new RegExp(`${ESC}\\[[\\d;]*m`, "g");
 const RE_OSC = new RegExp(`${ESC}\\].*?${ESC}\\\\`, "g");
+const RE_THINKING = /<thinking>([\s\S]*?)<\/thinking>/g;
 
 const DEFAULT_PROSE_WIDTH = 88;
 
@@ -30,12 +31,30 @@ function findStableBoundary(markdown: string): number {
   let stableEnd = 0;
   let inFence = false;
   let fenceChar: string | undefined;
+  let inThinking = false;
 
   for (const line of linePattern) {
     if (line === "") break;
     offset += line.length;
     const trimmed = line.trim();
     const lineComplete = line.endsWith("\n");
+
+    if (trimmed.startsWith("<thinking>")) {
+      if (trimmed.includes("</thinking>")) {
+        stableEnd = offset;
+      } else {
+        inThinking = true;
+      }
+      continue;
+    }
+
+    if (inThinking) {
+      if (trimmed.includes("</thinking>")) {
+        inThinking = false;
+        stableEnd = offset;
+      }
+      continue;
+    }
 
     const fence = trimmed.match(/^(`{3,}|~{3,})/);
     if (fence) {
@@ -49,6 +68,7 @@ function findStableBoundary(markdown: string): number {
       }
       continue;
     }
+
     if (inFence) continue;
 
     if (trimmed === "") {
@@ -66,6 +86,8 @@ function findStableBoundary(markdown: string): number {
 export class MarkdownRenderer {
   readonly #stream: NodeJS.WriteStream;
   #renderer: TokenRenderer;
+  #theme: MarkdownTheme;
+  #proseWidth: number;
   #buffer = "";
   #previewLines = 0;
 
@@ -81,11 +103,13 @@ export class MarkdownRenderer {
     const rawProseWidth = opts.proseWidth ?? DEFAULT_PROSE_WIDTH;
     const proseWidth = Math.max(10, Math.min(terminalWidth, rawProseWidth));
 
+    this.#theme = opts.theme ?? defaultMarkdownTheme;
+    this.#proseWidth = proseWidth;
     this.#renderer =
       opts.tokenRenderer ??
       new TokenRenderer({
         proseWidth,
-        theme: opts.theme ?? defaultMarkdownTheme,
+        theme: this.#theme,
       });
   }
 
@@ -103,7 +127,7 @@ export class MarkdownRenderer {
     if (this.#stream.isTTY) {
       this.#clearPreview();
       if (this.#buffer.length > 0) {
-        this.#commitStable(this.#buffer);
+        this.#commitWithThinking(this.#buffer);
         this.#buffer = "";
       }
     }
@@ -117,7 +141,7 @@ export class MarkdownRenderer {
 
     if (boundary > 0) {
       const stable = this.#buffer.slice(0, boundary);
-      this.#commitStable(stable);
+      this.#commitWithThinking(stable);
       this.#buffer = this.#buffer.slice(boundary);
     }
 
@@ -136,9 +160,23 @@ export class MarkdownRenderer {
     this.#previewLines = 0;
   }
 
-  #commitStable(text: string): void {
-    const tokens = marked.lexer(text);
-    const rendered = this.#renderer.render(tokens);
+  #commitWithThinking(text: string): void {
+    const blocks: string[] = [];
+    const processed = text.replace(RE_THINKING, (_, content: string) => {
+      const id = blocks.length;
+      blocks.push(content.trim());
+      return `\x00THINKING_${id}\x00`;
+    });
+
+    const tokens = marked.lexer(processed);
+    let rendered = this.#renderer.render(tokens);
+
+    for (const [id, content] of blocks.entries()) {
+      const sentinel = `\x00THINKING_${id}\x00`;
+      const thinkingLines = this.#renderThinkingBlock(content);
+      rendered = rendered.replace(sentinel, thinkingLines);
+    }
+
     if (rendered.length > 0) {
       this.#stream.write(rendered);
       this.#stream.write("\n\n");
@@ -151,5 +189,21 @@ export class MarkdownRenderer {
     if (rendered.length === 0) return;
     this.#stream.write(rendered);
     this.#previewLines = countLines(rendered, this.#stream.columns ?? 80);
+  }
+
+  #renderThinkingBlock(content: string): string {
+    const border = this.#theme.thinking.border;
+    const innerWidth = Math.max(1, this.#proseWidth - border.mark.length);
+    const inner = new TokenRenderer({ proseWidth: innerWidth, theme: this.#theme });
+    const rendered = inner.render(marked.lexer(content));
+    if (!rendered) return "";
+
+    const style = this.#theme.thinking;
+    const prefix = applyStyle(border.mark, border);
+
+    return rendered
+      .split("\n")
+      .map((line) => prefix + applyStyle(line, style))
+      .join("\n");
   }
 }
