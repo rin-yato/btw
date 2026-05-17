@@ -26,6 +26,7 @@
     "@clack/prompts": "^1.4.0",
     "@earendil-works/pi-agent-core": "^0.74.0",
     "@justmiracle/result": "^2.0.0",
+    "marked": "^18.0.3",
     "picocolors": "^1.1.1",
     "typescript": "6.0.3",
     "valibot": "^1.4.0",

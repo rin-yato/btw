@@ -2,6 +2,7 @@ import { AiService } from "@/lib/ai";
 import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
 import { CONFIG_FILENAME, ConfigService, getConfigDir } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
+import { MarkdownRenderer } from "@/lib/markdown";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
@@ -60,10 +61,12 @@ async function streamAnswer(
     signal: controller.signal,
   });
 
+  const renderer = new MarkdownRenderer();
+
   for await (const event of stream) {
     if (event.type === "error") {
       if (controller.signal.aborted) {
-        process.stdout.write("\n");
+        renderer.end();
         return;
       }
       process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
@@ -73,11 +76,11 @@ async function streamAnswer(
       process.stderr.write(pc.dim(event.delta));
     }
     if (event.type === "text") {
-      process.stdout.write(event.delta);
+      renderer.write(event.delta);
     }
   }
 
-  process.stdout.write("\n");
+  renderer.end();
 }
 
 export async function questionCmd(
