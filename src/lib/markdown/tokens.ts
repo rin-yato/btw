@@ -1,6 +1,7 @@
 import { isOk, makeSafe } from "@justmiracle/result";
 import { highlight, supportsLanguage } from "cli-highlight";
 import type { Token, Tokens } from "marked";
+import { marked } from "marked";
 import { dropWhile, join, map, pipe, reverse } from "remeda";
 import wrapAnsi from "wrap-ansi";
 
@@ -87,6 +88,8 @@ export class TokenRenderer {
         return this.#renderHr(w);
       case "table":
         return this.#renderTable(token as Tokens.Table, w);
+      case "thinking":
+        return this.#renderThinking(token as Tokens.Generic, w);
       default:
         if ("raw" in token) {
           const raw = (token as Token & { raw: string }).raw.trim();
@@ -212,6 +215,26 @@ export class TokenRenderer {
 
     lines.push("");
     return lines;
+  }
+
+  #renderThinking(token: Tokens.Generic, width: number): string[] {
+    const content = token.text as string;
+    const border = this.#theme.thinking.border;
+    const borderWidth = visibleWidth(border.mark);
+    const innerWidth = Math.max(1, width - borderWidth);
+    const inner = new TokenRenderer({ proseWidth: innerWidth, theme: this.#theme });
+    const rendered = inner.render(marked.lexer(content));
+    const style = this.#theme.thinking;
+    const prefix = applyStyle(border.mark, border);
+
+    if (!rendered) {
+      return [prefix + applyStyle("", style), ""];
+    }
+
+    return rendered
+      .split("\n")
+      .map((line) => prefix + applyStyle(line, style))
+      .concat([""]);
   }
 
   #renderInlines(tokens: Token[] | undefined): string {

@@ -1,14 +1,44 @@
+import type { TokenizerThis, Tokens } from "marked";
 import { marked } from "marked";
 import { map, pipe, split, sum } from "remeda";
 
 import type { MarkdownTheme, RenderMarkdownOptions } from "./theme";
-import { applyStyle, defaultMarkdownTheme } from "./theme";
+import { defaultMarkdownTheme } from "./theme";
 import { TokenRenderer } from "./tokens";
+
+marked.use({
+  extensions: [
+    {
+      name: "thinking",
+      level: "block",
+      start(this: TokenizerThis, src: string): number | undefined {
+        return src.indexOf("<thinking>");
+      },
+      tokenizer(this: TokenizerThis, src: string): Tokens.Generic | undefined {
+        const closed = /^<thinking>([\s\S]*?)<\/thinking>/s.exec(src);
+        if (closed) {
+          return {
+            type: "thinking",
+            raw: closed[0],
+            text: (closed[1] ?? "").trim(),
+          };
+        }
+        const open = /^<thinking>([\s\S]*)$/s.exec(src);
+        if (open) {
+          return {
+            type: "thinking",
+            raw: open[0],
+            text: (open[1] ?? "").trim(),
+          };
+        }
+      },
+    },
+  ],
+});
 
 const ESC = String.fromCharCode(27);
 const RE_ANSI = new RegExp(`${ESC}\\[[\\d;]*m`, "g");
 const RE_OSC = new RegExp(`${ESC}\\].*?${ESC}\\\\`, "g");
-const RE_THINKING = /<thinking>([\s\S]*?)<\/thinking>/g;
 
 const DEFAULT_PROSE_WIDTH = 88;
 
@@ -127,7 +157,7 @@ export class MarkdownRenderer {
     if (this.#stream.isTTY) {
       this.#clearPreview();
       if (this.#buffer.length > 0) {
-        this.#commitWithThinking(this.#buffer);
+        this.#commit(this.#buffer);
         this.#buffer = "";
       }
     }
@@ -141,7 +171,7 @@ export class MarkdownRenderer {
 
     if (boundary > 0) {
       const stable = this.#buffer.slice(0, boundary);
-      this.#commitWithThinking(stable);
+      this.#commit(stable);
       this.#buffer = this.#buffer.slice(boundary);
     }
 
@@ -160,23 +190,9 @@ export class MarkdownRenderer {
     this.#previewLines = 0;
   }
 
-  #commitWithThinking(text: string): void {
-    const blocks: string[] = [];
-    const processed = text.replace(RE_THINKING, (_, content: string) => {
-      const id = blocks.length;
-      blocks.push(content.trim());
-      return `\x00THINKING_${id}\x00`;
-    });
-
-    const tokens = marked.lexer(processed);
-    let rendered = this.#renderer.render(tokens);
-
-    for (const [id, content] of blocks.entries()) {
-      const sentinel = `\x00THINKING_${id}\x00`;
-      const thinkingLines = this.#renderThinkingBlock(content);
-      rendered = rendered.replace(sentinel, thinkingLines);
-    }
-
+  #commit(text: string): void {
+    const tokens = marked.lexer(text);
+    const rendered = this.#renderer.render(tokens);
     if (rendered.length > 0) {
       this.#stream.write(rendered);
       this.#stream.write("\n\n");
@@ -189,21 +205,5 @@ export class MarkdownRenderer {
     if (rendered.length === 0) return;
     this.#stream.write(rendered);
     this.#previewLines = countLines(rendered, this.#stream.columns ?? 80);
-  }
-
-  #renderThinkingBlock(content: string): string {
-    const border = this.#theme.thinking.border;
-    const innerWidth = Math.max(1, this.#proseWidth - border.mark.length);
-    const inner = new TokenRenderer({ proseWidth: innerWidth, theme: this.#theme });
-    const rendered = inner.render(marked.lexer(content));
-    if (!rendered) return "";
-
-    const style = this.#theme.thinking;
-    const prefix = applyStyle(border.mark, border);
-
-    return rendered
-      .split("\n")
-      .map((line) => prefix + applyStyle(line, style))
-      .join("\n");
   }
 }
