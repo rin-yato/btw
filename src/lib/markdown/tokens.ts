@@ -1,10 +1,10 @@
 import { isOk, makeSafe } from "@justmiracle/result";
 import { highlight, supportsLanguage } from "cli-highlight";
 import type { Token, Tokens } from "marked";
-import { marked } from "marked";
 import { dropWhile, join, map, pipe, reverse } from "remeda";
 import wrapAnsi from "wrap-ansi";
 
+import { marked } from "./marked";
 import { applyStyle, defaultMarkdownTheme, type MarkdownTheme } from "./theme";
 
 const safeHighlight = makeSafe(highlight);

@@ -11,8 +11,8 @@
   "scripts": {
     "dev": "bun src/index.ts",
     "btw": "bun src/index.ts",
-    "render:sample": "bun src/lib/markdown/sample-renderer.ts",
-    "stream:sample": "bun src/lib/markdown/stream-sample.ts",
+    "render:sample": "bun samples/sample-renderer.ts",
+    "stream:sample": "bun samples/stream-sample.ts",
     "build": "bun build --minify --target node --outdir dist src/index.ts",
     "check": "biome check",
     "check:fix": "biome check --write --unsafe",

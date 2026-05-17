@@ -15,8 +15,8 @@ export const CUSTOM_MODELS: Record<string, Record<string, Model<"openai-completi
       reasoning: true,
       thinkingLevelMap: {
         minimal: null,
-        low: null,
-        medium: null,
+        low: "low",
+        medium: "medium",
         high: "high",
         xhigh: "max",
       },

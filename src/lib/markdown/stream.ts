@@ -1,40 +1,9 @@
-import type { TokenizerThis, Tokens } from "marked";
-import { marked } from "marked";
 import { map, pipe, split, sum } from "remeda";
 
+import { marked } from "./marked";
 import type { MarkdownTheme, RenderMarkdownOptions } from "./theme";
 import { defaultMarkdownTheme } from "./theme";
 import { TokenRenderer } from "./tokens";
-
-marked.use({
-  extensions: [
-    {
-      name: "thinking",
-      level: "block",
-      start(this: TokenizerThis, src: string): number | undefined {
-        return src.indexOf("<thinking>");
-      },
-      tokenizer(this: TokenizerThis, src: string): Tokens.Generic | undefined {
-        const closed = /^<thinking>([\s\S]*?)<\/thinking>/s.exec(src);
-        if (closed) {
-          return {
-            type: "thinking",
-            raw: closed[0],
-            text: (closed[1] ?? "").trim(),
-          };
-        }
-        const open = /^<thinking>([\s\S]*)$/s.exec(src);
-        if (open) {
-          return {
-            type: "thinking",
-            raw: open[0],
-            text: (open[1] ?? "").trim(),
-          };
-        }
-      },
-    },
-  ],
-});
 
 const ESC = String.fromCharCode(27);
 const RE_ANSI = new RegExp(`${ESC}\\[[\\d;]*m`, "g");
