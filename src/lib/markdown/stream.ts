@@ -3,7 +3,7 @@ import { map, pipe, split, sum } from "remeda";
 import { findStableBoundary } from "./boundary";
 import { marked } from "./marked";
 import type { MarkdownTheme, RenderMarkdownOptions } from "./theme";
-import { defaultMarkdownTheme } from "./theme";
+import { applyStyle, defaultMarkdownTheme } from "./theme";
 import { TokenRenderer } from "./tokens";
 
 const ESC = String.fromCharCode(27);
@@ -178,9 +178,23 @@ export class MarkdownRenderer {
   }
 
   #renderThinkingMarkup(text: string): string {
-    const wrapped = `<thinking>${text}</thinking>`;
-    const tokens = marked.lexer(wrapped);
-    return this.#renderer.render(tokens);
+    const border = this.#theme.thinking.border;
+    const borderWidth = stripAnsi(border.mark).length;
+
+    const innerWidth = Math.max(1, this.#proseWidth - borderWidth);
+    const inner = new TokenRenderer({ proseWidth: innerWidth, theme: this.#theme });
+
+    const tokens = marked.lexer(text);
+
+    const rendered = inner.render(tokens);
+    if (!rendered) return "";
+
+    const prefix = applyStyle(border.mark, border);
+
+    return rendered
+      .split("\n")
+      .map((line) => prefix + applyStyle(line, this.#theme.thinking))
+      .join("\n");
   }
 
   #emitThinking(text: string, trailing: string): void {

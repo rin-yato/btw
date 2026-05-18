@@ -73,7 +73,6 @@ export const defaultMarkdownTheme: MarkdownTheme = {
   emphasis: { color: "magenta", italic: true },
   deletion: { strikethrough: true },
   thinking: {
-    color: "yellow",
     dim: true,
     border: { mark: "┃ ", dim: true, color: "yellow" },
   },
