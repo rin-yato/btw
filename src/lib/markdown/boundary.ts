@@ -26,7 +26,7 @@ export function findStableBoundary(markdown: string): number {
 
     if (inFence) continue;
 
-    if (trimmed === "") {
+    if (lineComplete && trimmed === "") {
       stableEnd = offset;
     } else if (lineComplete && /^#{1,6}\s+/.test(trimmed)) {
       stableEnd = offset;

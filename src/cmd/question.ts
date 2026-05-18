@@ -2,7 +2,7 @@ import { AiService } from "@/lib/ai";
 import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
 import { CONFIG_FILENAME, ConfigService, getConfigDir } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
-import { MarkdownRenderer } from "@/lib/markdown";
+import { MarkdownRenderer, ThinkingRenderer } from "@/lib/markdown";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
@@ -27,10 +27,17 @@ export async function readQuestion(): Promise<Result<string, void>> {
   return ok(question);
 }
 
-async function streamAnswer(
+type AnswerRenderer = Pick<MarkdownRenderer, "writeText" | "end">;
+type ThinkingRendererLike = Pick<ThinkingRenderer, "start" | "write" | "end">;
+
+export async function streamAnswer(
   question: string,
   noThinking: boolean,
   modelOverride?: string,
+  renderers: {
+    answer?: AnswerRenderer;
+    thinking?: ThinkingRendererLike;
+  } = {},
 ): Promise<void> {
   const configService = new ConfigService(
     new JsonStore({ dir: getConfigDir(), filename: CONFIG_FILENAME }),
@@ -57,7 +64,11 @@ async function streamAnswer(
   const controller = new AbortController();
   process.on("SIGINT", () => controller.abort());
 
-  const renderer = new MarkdownRenderer();
+  const renderer = renderers.answer ?? new MarkdownRenderer();
+  const thinkingRenderer = hideThinking
+    ? undefined
+    : (renderers.thinking ?? new ThinkingRenderer());
+  let thinkingOpen = false;
 
   await ai.streamQuestion(
     question,
@@ -65,19 +76,22 @@ async function streamAnswer(
     (event) => {
       switch (event.type) {
         case "thinking_start":
-          if (!hideThinking) renderer.startThinking();
+          thinkingOpen = true;
+          thinkingRenderer?.start();
           break;
         case "thinking":
-          if (!hideThinking) renderer.writeThinking(event.delta);
+          thinkingRenderer?.write(event.delta);
           break;
         case "thinking_end":
-          if (!hideThinking) renderer.endThinking();
+          thinkingRenderer?.end();
+          thinkingOpen = false;
           break;
         case "text":
           renderer.writeText(event.delta);
           break;
         case "error":
           if (controller.signal.aborted) {
+            if (thinkingOpen) thinkingRenderer?.end();
             renderer.end();
             return;
           }
@@ -88,6 +102,7 @@ async function streamAnswer(
     { signal: controller.signal },
   );
 
+  if (thinkingOpen) thinkingRenderer?.end();
   renderer.end();
 }
 

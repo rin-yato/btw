@@ -8,4 +8,5 @@ export {
   type TextStyle,
   type ThemeColor,
 } from "./theme";
+export { ThinkingRenderer } from "./thinking";
 export { TokenRenderer } from "./tokens";

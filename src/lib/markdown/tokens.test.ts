@@ -54,18 +54,6 @@ describe("TokenRenderer", () => {
     expect(result).not.toContain("[example]");
   });
 
-  test("thinking block", () => {
-    const result = r.render(marked.lexer("<thinking>let me think</thinking>"));
-    expect(stripAnsi(result)).toContain("let me think");
-  });
-
-  test("thinking block with inner markdown", () => {
-    const result = r.render(marked.lexer("<thinking>use `code` and **bold**</thinking>"));
-    const plain = stripAnsi(result);
-    expect(plain).toContain("code");
-    expect(plain).toContain("bold");
-  });
-
   test("blockquote", () => {
     const result = r.render(marked.lexer("> quoted text"));
     expect(stripAnsi(result)).toContain("quoted text");

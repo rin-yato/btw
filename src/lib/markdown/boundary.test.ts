@@ -15,6 +15,16 @@ describe("findStableBoundary", () => {
     expect(findStableBoundary("Hello\n\n")).toBe(7);
   });
 
+  test("incomplete whitespace line is not stable", () => {
+    expect(findStableBoundary("Hello\n ")).toBe(0);
+  });
+
+  test("incomplete indented list prefix is not stable", () => {
+    const md = "- Parent\n  ";
+
+    expect(findStableBoundary(md)).toBe(0);
+  });
+
   test("multiple paragraph breaks all commit", () => {
     const md = "Hello\n\nWorld\n\n";
     expect(findStableBoundary(md)).toBe(md.length);

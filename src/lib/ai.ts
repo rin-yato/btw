@@ -193,12 +193,10 @@ export class AiService {
     const agent = new Agent({
       initialState: {
         model: modelLookup.value,
-        thinkingLevel: "low",
         systemPrompt: [
           "You are an assistant in the terminal. User will ask you questions from their cli.",
           "Answer concisely and clearly, make sure your response is suitable for terminal display.",
           "If the user asks you to perform a task, respond with the steps you would take to complete the task.",
-          "Dont think too much!",
         ].join(" "),
       },
       getApiKey: () => config.apiKey,

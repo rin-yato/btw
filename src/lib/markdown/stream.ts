@@ -2,7 +2,7 @@ import { map, pipe, split, sum } from "remeda";
 
 import { findStableBoundary } from "./boundary";
 import { marked } from "./marked";
-import type { MarkdownTheme, RenderMarkdownOptions } from "./theme";
+import type { MarkStyle, RenderMarkdownOptions, TextStyle } from "./theme";
 import { applyStyle, defaultMarkdownTheme } from "./theme";
 import { TokenRenderer } from "./tokens";
 
@@ -11,16 +11,26 @@ const RE_ANSI = new RegExp(`${ESC}\\[[\\d;]*m`, "g");
 const RE_OSC = new RegExp(`${ESC}\\].*?${ESC}\\\\`, "g");
 
 const DEFAULT_PROSE_WIDTH = 88;
+const DEFAULT_TERMINAL_WIDTH = 80;
+const PREVIEW_FRAME_MS = 50;
 
 function stripAnsi(s: string): string {
   return s.replace(RE_ANSI, "").replace(RE_OSC, "");
 }
 
-function countLines(text: string, columns: number): number {
+function terminalColumns(columns: number | undefined): number {
+  return Number.isFinite(columns) && typeof columns === "number" && columns > 0
+    ? columns
+    : DEFAULT_TERMINAL_WIDTH;
+}
+
+function countLines(text: string, columns: number | undefined): number {
+  const width = terminalColumns(columns);
+
   return pipe(
     text,
     split("\n"),
-    map((line) => Math.max(1, Math.ceil(stripAnsi(line).length / columns))),
+    map((line) => Math.max(1, Math.ceil(stripAnsi(line).length / width))),
     sum(),
   );
 }
@@ -28,11 +38,14 @@ function countLines(text: string, columns: number): number {
 export class MarkdownRenderer {
   readonly #stream: NodeJS.WriteStream;
   #renderer: TokenRenderer;
-  #theme: MarkdownTheme;
-  #proseWidth: number;
+  #linePrefix: MarkStyle | undefined;
+  #lineStyle: TextStyle | undefined;
   #buffer = "";
+  #pendingPreview = false;
+  #preview = "";
   #previewLines = 0;
-  #thinkingBuffer = "";
+  #previewTimer: ReturnType<typeof setTimeout> | undefined;
+  #lastPreviewAt = 0;
 
   constructor(
     opts: {
@@ -42,17 +55,21 @@ export class MarkdownRenderer {
   ) {
     this.#stream = opts.stream ?? process.stdout;
 
-    const terminalWidth = this.#stream.columns ?? 80;
+    const terminalWidth = terminalColumns(this.#stream.columns);
     const rawProseWidth = opts.proseWidth ?? DEFAULT_PROSE_WIDTH;
     const proseWidth = Math.max(10, Math.min(terminalWidth, rawProseWidth));
 
-    this.#theme = opts.theme ?? defaultMarkdownTheme;
-    this.#proseWidth = proseWidth;
+    const theme = opts.theme ?? defaultMarkdownTheme;
+    const prefixWidth = opts.linePrefix ? stripAnsi(opts.linePrefix.mark).length : 0;
+    const renderWidth = Math.max(1, proseWidth - prefixWidth);
+
+    this.#linePrefix = opts.linePrefix;
+    this.#lineStyle = opts.lineStyle;
     this.#renderer =
       opts.tokenRenderer ??
       new TokenRenderer({
-        proseWidth,
-        theme: this.#theme,
+        proseWidth: renderWidth,
+        theme,
       });
   }
 
@@ -69,29 +86,11 @@ export class MarkdownRenderer {
     }
 
     this.#buffer += delta;
-    this.#rerender();
-  }
-
-  startThinking(): void {
-    this.#thinkingBuffer = "";
-  }
-
-  writeThinking(delta: string): void {
-    if (!this.#stream.isTTY) {
-      this.#stream.write(delta);
-      return;
-    }
-
-    this.#thinkingBuffer += delta;
-    this.#rerenderThinking();
-  }
-
-  endThinking(): void {
-    this.#flushThinking();
+    this.#schedulePreview();
   }
 
   end(): void {
-    this.#flushThinking();
+    this.#cancelScheduledPreview();
 
     if (this.#stream.isTTY) {
       this.#clearPreview();
@@ -100,17 +99,63 @@ export class MarkdownRenderer {
         this.#buffer = "";
       }
     }
-    this.#stream.write("\n");
+    this.#stream.write("\n\n");
   }
 
   // ── private: text path ──────────────────────────────────────────────
 
+  #schedulePreview(): void {
+    this.#pendingPreview = true;
+
+    if (findStableBoundary(this.#buffer) > 0) {
+      this.#flushScheduledPreview();
+      return;
+    }
+
+    if (this.#previewTimer) return;
+
+    const elapsed = Date.now() - this.#lastPreviewAt;
+    const delay = Math.max(0, PREVIEW_FRAME_MS - elapsed);
+
+    if (delay === 0) {
+      this.#flushScheduledPreview();
+      return;
+    }
+
+    this.#previewTimer = setTimeout(() => {
+      this.#flushScheduledPreview();
+    }, delay);
+  }
+
+  #flushScheduledPreview(): void {
+    if (this.#previewTimer) {
+      clearTimeout(this.#previewTimer);
+      this.#previewTimer = undefined;
+    }
+
+    const pendingPreview = this.#pendingPreview;
+    this.#pendingPreview = false;
+
+    if (pendingPreview) {
+      this.#rerender();
+    }
+
+    this.#lastPreviewAt = Date.now();
+  }
+
+  #cancelScheduledPreview(): void {
+    if (this.#previewTimer) {
+      clearTimeout(this.#previewTimer);
+      this.#previewTimer = undefined;
+    }
+    this.#pendingPreview = false;
+  }
+
   #rerender(): void {
     const boundary = findStableBoundary(this.#buffer);
 
-    this.#clearPreview();
-
     if (boundary > 0) {
+      this.#clearPreview();
       const stable = this.#buffer.slice(0, boundary);
       this.#commit(stable);
       this.#buffer = this.#buffer.slice(boundary);
@@ -122,85 +167,70 @@ export class MarkdownRenderer {
   }
 
   #commit(text: string): void {
-    const tokens = marked.lexer(text);
-    const rendered = this.#renderer.render(tokens);
+    const rendered = this.#renderMarkdown(text);
     if (rendered.length > 0) {
       this.#stream.write(rendered);
-      this.#stream.write("\n\n");
+      this.#stream.write(this.#linePrefix ? `\n${this.#styledLinePrefix()}\n` : "\n\n");
     }
   }
 
   #renderPreview(text: string): void {
+    const rendered = this.#renderMarkdown(text);
+    this.#paintPreview(rendered);
+  }
+
+  #renderMarkdown(text: string): string {
     const tokens = marked.lexer(text);
     const rendered = this.#renderer.render(tokens);
-    if (rendered.length === 0) return;
-    this.#stream.write(rendered);
-    this.#previewLines = countLines(rendered, this.#stream.columns ?? 80);
+    return this.#decorate(rendered);
+  }
+
+  #decorate(rendered: string): string {
+    if (!this.#linePrefix && !this.#lineStyle) return rendered;
+    if (rendered.length === 0) return "";
+
+    const prefix = this.#styledLinePrefix();
+    return rendered
+      .split("\n")
+      .map((line) => prefix + (this.#lineStyle ? applyStyle(line, this.#lineStyle) : line))
+      .join("\n");
+  }
+
+  #styledLinePrefix(): string {
+    if (!this.#linePrefix) return "";
+    return applyStyle(this.#linePrefix.mark, this.#linePrefix);
+  }
+
+  #paintPreview(rendered: string): void {
+    if (rendered.length === 0) {
+      this.#clearPreview();
+      return;
+    }
+
+    if (rendered === this.#preview) return;
+
+    if (this.#preview.length > 0 && rendered.startsWith(this.#preview)) {
+      this.#stream.write(rendered.slice(this.#preview.length));
+    } else {
+      this.#clearPreview();
+      this.#stream.write(rendered);
+    }
+
+    this.#preview = rendered;
+    this.#previewLines = countLines(rendered, this.#stream.columns);
   }
 
   #clearPreview(): void {
-    if (this.#previewLines === 0) return;
+    if (this.#previewLines === 0) {
+      this.#preview = "";
+      return;
+    }
 
     if (this.#previewLines > 1) {
       this.#stream.write(`\x1b[${this.#previewLines - 1}A`);
     }
     this.#stream.write("\r\x1b[J");
+    this.#preview = "";
     this.#previewLines = 0;
-  }
-
-  // ── private: thinking path ──────────────────────────────────────────
-
-  #rerenderThinking(): void {
-    const boundary = findStableBoundary(this.#thinkingBuffer);
-
-    this.#clearPreview();
-
-    if (boundary > 0) {
-      const stable = this.#thinkingBuffer.slice(0, boundary);
-      this.#emitThinking(stable, "\n");
-      this.#thinkingBuffer = this.#thinkingBuffer.slice(boundary);
-    }
-
-    if (this.#thinkingBuffer.length > 0) {
-      const rendered = this.#renderThinkingMarkup(this.#thinkingBuffer);
-      if (rendered.length > 0) {
-        this.#stream.write(rendered);
-        this.#previewLines = countLines(rendered, this.#stream.columns ?? 80);
-      }
-    }
-  }
-
-  #flushThinking(): void {
-    if (this.#thinkingBuffer.length === 0) return;
-    this.#clearPreview();
-    this.#emitThinking(this.#thinkingBuffer, "\n\n");
-    this.#thinkingBuffer = "";
-  }
-
-  #renderThinkingMarkup(text: string): string {
-    const border = this.#theme.thinking.border;
-    const borderWidth = stripAnsi(border.mark).length;
-
-    const innerWidth = Math.max(1, this.#proseWidth - borderWidth);
-    const inner = new TokenRenderer({ proseWidth: innerWidth, theme: this.#theme });
-
-    const tokens = marked.lexer(text);
-
-    const rendered = inner.render(tokens);
-    if (!rendered) return "";
-
-    const prefix = applyStyle(border.mark, border);
-
-    return rendered
-      .split("\n")
-      .map((line) => prefix + applyStyle(line, this.#theme.thinking))
-      .join("\n");
-  }
-
-  #emitThinking(text: string, trailing: string): void {
-    const rendered = this.#renderThinkingMarkup(text);
-    if (rendered.length > 0) {
-      this.#stream.write(rendered + trailing);
-    }
   }
 }

@@ -26,16 +26,15 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
-    "@earendil-works/pi-agent-core": "^0.75.1",
-    "@earendil-works/pi-ai": "^0.75.1",
+    "@earendil-works/pi-agent-core": "^0.75.3",
+    "@earendil-works/pi-ai": "^0.75.3",
     "@justmiracle/result": "^2.0.0",
     "cli-highlight": "^2.1.11",
-    "marked": "^18.0.3",
+    "marked": "^18.0.4",
     "picocolors": "^1.1.1",
     "remeda": "^2.34.1",
     "typescript": "6.0.3",
     "valibot": "^1.4.0",
-    "wrap-ansi": "^10.0.0",
-    "yargs": "^18.0.0"
+    "wrap-ansi": "^10.0.0"
   }
 }

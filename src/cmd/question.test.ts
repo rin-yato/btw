@@ -67,20 +67,28 @@ class TestStreamError extends Error {
 // Mock renderer
 // ---------------------------------------------------------------------------
 
-interface MockRenderer {
+interface MockAnswerRenderer {
   writeText: ReturnType<typeof mock>;
-  startThinking: ReturnType<typeof mock>;
-  writeThinking: ReturnType<typeof mock>;
-  endThinking: ReturnType<typeof mock>;
   end: ReturnType<typeof mock>;
 }
 
-function createRendererMock(): MockRenderer {
+interface MockThinkingRenderer {
+  start: ReturnType<typeof mock>;
+  write: ReturnType<typeof mock>;
+  end: ReturnType<typeof mock>;
+}
+
+function createAnswerRendererMock(): MockAnswerRenderer {
   return {
     writeText: mock(() => {}),
-    startThinking: mock(() => {}),
-    writeThinking: mock((_delta: string) => {}),
-    endThinking: mock(() => {}),
+    end: mock(() => {}),
+  };
+}
+
+function createThinkingRendererMock(): MockThinkingRenderer {
+  return {
+    start: mock(() => {}),
+    write: mock((_delta: string) => {}),
     end: mock(() => {}),
   };
 }
@@ -222,11 +230,18 @@ afterEach(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Helper: cast mock renderer for streamAnswer
+// Helper: inject mock renderers for streamAnswer
 // ---------------------------------------------------------------------------
 
-function answer(renderer: MockRenderer, noThinking = false) {
-  return streamAnswer("hello", noThinking, undefined, renderer as any);
+function answer(
+  renderer: MockAnswerRenderer,
+  noThinking = false,
+  thinkingRenderer = createThinkingRendererMock(),
+) {
+  return streamAnswer("hello", noThinking, undefined, {
+    answer: renderer,
+    thinking: thinkingRenderer,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +251,7 @@ function answer(renderer: MockRenderer, noThinking = false) {
 describe("streamAnswer", () => {
   test("streams text events through renderer", async () => {
     _streamEvents = textAnswer;
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
 
     await answer(renderer);
 
@@ -248,15 +263,16 @@ describe("streamAnswer", () => {
 
   test("streams thinking block followed by text", async () => {
     _streamEvents = thinkingAnswer;
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
+    const thinkingRenderer = createThinkingRendererMock();
 
-    await answer(renderer);
+    await answer(renderer, false, thinkingRenderer);
 
-    expect(renderer.startThinking).toHaveBeenCalledTimes(1);
-    expect(renderer.writeThinking).toHaveBeenCalledTimes(2);
-    expect(renderer.writeThinking).toHaveBeenNthCalledWith(1, "Let me ");
-    expect(renderer.writeThinking).toHaveBeenNthCalledWith(2, "think...");
-    expect(renderer.endThinking).toHaveBeenCalledTimes(1);
+    expect(thinkingRenderer.start).toHaveBeenCalledTimes(1);
+    expect(thinkingRenderer.write).toHaveBeenCalledTimes(2);
+    expect(thinkingRenderer.write).toHaveBeenNthCalledWith(1, "Let me ");
+    expect(thinkingRenderer.write).toHaveBeenNthCalledWith(2, "think...");
+    expect(thinkingRenderer.end).toHaveBeenCalledTimes(1);
     expect(renderer.writeText).toHaveBeenCalledTimes(1);
     expect(renderer.writeText).toHaveBeenCalledWith("The answer is **42**.");
     expect(renderer.end).toHaveBeenCalledTimes(1);
@@ -264,13 +280,14 @@ describe("streamAnswer", () => {
 
   test("hides thinking when noThinking is true", async () => {
     _streamEvents = thinkingAnswer;
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
+    const thinkingRenderer = createThinkingRendererMock();
 
-    await answer(renderer, true);
+    await answer(renderer, true, thinkingRenderer);
 
-    expect(renderer.startThinking).not.toHaveBeenCalled();
-    expect(renderer.writeThinking).not.toHaveBeenCalled();
-    expect(renderer.endThinking).not.toHaveBeenCalled();
+    expect(thinkingRenderer.start).not.toHaveBeenCalled();
+    expect(thinkingRenderer.write).not.toHaveBeenCalled();
+    expect(thinkingRenderer.end).not.toHaveBeenCalled();
     expect(renderer.writeText).toHaveBeenCalledTimes(1);
     expect(renderer.writeText).toHaveBeenCalledWith("The answer is **42**.");
     expect(renderer.end).toHaveBeenCalledTimes(1);
@@ -283,13 +300,14 @@ describe("streamAnswer", () => {
     });
     await configStore.write({ model: "openai:gpt-4o-mini", showThinking: false });
     _streamEvents = thinkingAnswer;
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
+    const thinkingRenderer = createThinkingRendererMock();
 
-    await answer(renderer);
+    await answer(renderer, false, thinkingRenderer);
 
-    expect(renderer.startThinking).not.toHaveBeenCalled();
-    expect(renderer.writeThinking).not.toHaveBeenCalled();
-    expect(renderer.endThinking).not.toHaveBeenCalled();
+    expect(thinkingRenderer.start).not.toHaveBeenCalled();
+    expect(thinkingRenderer.write).not.toHaveBeenCalled();
+    expect(thinkingRenderer.end).not.toHaveBeenCalled();
     expect(renderer.writeText).toHaveBeenCalledTimes(1);
     expect(renderer.end).toHaveBeenCalledTimes(1);
   });
@@ -300,7 +318,7 @@ describe("streamAnswer", () => {
       filename: CONFIG_FILENAME,
     });
     await configStore.write({ showThinking: "not-a-boolean" } as any);
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
 
     await expect(answer(renderer)).rejects.toThrow("process.exit was called");
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -309,7 +327,7 @@ describe("streamAnswer", () => {
 
   test("exits on model config error", async () => {
     _modelConfigResult = err(new Error("No API key"));
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
 
     await expect(answer(renderer)).rejects.toThrow("process.exit was called");
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -318,7 +336,7 @@ describe("streamAnswer", () => {
 
   test("exits on stream error when not aborted", async () => {
     _streamEvents = [{ type: "error", error: new TestStreamError("API error") }];
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
 
     await expect(answer(renderer)).rejects.toThrow("process.exit was called");
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -329,7 +347,7 @@ describe("streamAnswer", () => {
   test("ends renderer on stream error when signal already aborted", async () => {
     _aborted = true;
     _streamEvents = [{ type: "error", error: new TestStreamError("API error") }];
-    const renderer = createRendererMock();
+    const renderer = createAnswerRendererMock();
 
     await answer(renderer);
 

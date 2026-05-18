@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { MarkdownRenderer } from "@/lib/markdown";
+import { MarkdownRenderer, ThinkingRenderer } from "@/lib/markdown";
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -12,13 +12,14 @@ async function main() {
   const thinking = readFileSync(join(import.meta.dir, "thinking.md"), "utf-8");
 
   const renderer = new MarkdownRenderer();
+  const thinkingRenderer = new ThinkingRenderer();
 
-  renderer.startThinking();
+  thinkingRenderer.start();
   for (const char of thinking) {
-    renderer.writeThinking(char);
+    thinkingRenderer.write(char);
     await delay(10);
   }
-  renderer.endThinking();
+  thinkingRenderer.end();
 
   for (const char of md) {
     renderer.write(char);

@@ -49,9 +49,6 @@ export type MarkdownTheme = {
   strong: TextStyle;
   emphasis: TextStyle;
   deletion: TextStyle;
-  thinking: TextStyle & {
-    border: MarkStyle;
-  };
 };
 
 export const defaultMarkdownTheme: MarkdownTheme = {
@@ -72,16 +69,14 @@ export const defaultMarkdownTheme: MarkdownTheme = {
   strong: { color: "magenta", bold: true },
   emphasis: { color: "magenta", italic: true },
   deletion: { strikethrough: true },
-  thinking: {
-    dim: true,
-    border: { mark: "┃ ", dim: true, color: "yellow" },
-  },
 };
 
 export type RenderMarkdownOptions = {
   width?: number;
   proseWidth?: number;
   theme?: MarkdownTheme;
+  linePrefix?: MarkStyle;
+  lineStyle?: TextStyle;
 };
 
 const RE_HEX = /^#[0-9a-fA-F]{6}$/;
