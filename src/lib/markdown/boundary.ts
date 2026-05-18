@@ -4,30 +4,12 @@ export function findStableBoundary(markdown: string): number {
   let stableEnd = 0;
   let inFence = false;
   let fenceChar: string | undefined;
-  let inThinking = false;
 
   for (const line of linePattern) {
     if (line === "") break;
     offset += line.length;
     const trimmed = line.trim();
     const lineComplete = line.endsWith("\n");
-
-    if (trimmed.startsWith("<thinking>")) {
-      if (trimmed.includes("</thinking>")) {
-        stableEnd = offset;
-      } else {
-        inThinking = true;
-      }
-      continue;
-    }
-
-    if (inThinking) {
-      if (trimmed.includes("</thinking>")) {
-        inThinking = false;
-        stableEnd = offset;
-      }
-      continue;
-    }
 
     const fence = trimmed.match(/^(`{3,}|~{3,})/);
     if (fence) {

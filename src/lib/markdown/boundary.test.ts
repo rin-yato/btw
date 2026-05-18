@@ -62,30 +62,4 @@ describe("findStableBoundary", () => {
     const md = "~~~\ncode\n~~~\n";
     expect(findStableBoundary(md)).toBe(md.length);
   });
-
-  test("open thinking block is not stable", () => {
-    expect(findStableBoundary("<thinking>Let me reason")).toBe(0);
-  });
-
-  test("open thinking block with blank lines is not stable", () => {
-    expect(findStableBoundary("<thinking>Reason 1\n\nReason 2\n\n")).toBe(0);
-  });
-
-  test("closed thinking block is stable", () => {
-    expect(findStableBoundary("<thinking>Done</thinking>\n\n")).toBe(27);
-  });
-
-  test("thinking block then text: only paragraph break after closing is stable", () => {
-    expect(findStableBoundary("<thinking>Done</thinking>\n\nMore")).toBe(27);
-  });
-
-  test("complete output with thinking and paragraph breaks", () => {
-    const md = "<thinking>Reason 1\n\nReason 2</thinking>\n\nNext para\n\n";
-    expect(findStableBoundary(md)).toBe(md.length);
-  });
-
-  test("thinking block followed by fence", () => {
-    const md = "<thinking>Done</thinking>\n\n```\ncode\n```\n";
-    expect(findStableBoundary(md)).toBe(md.length);
-  });
 });

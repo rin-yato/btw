@@ -65,16 +65,16 @@ async function streamAnswer(
     (event) => {
       switch (event.type) {
         case "thinking_start":
-          if (!hideThinking) renderer.write("<thinking>");
+          if (!hideThinking) renderer.startThinking();
           break;
         case "thinking":
-          if (!hideThinking) renderer.write(event.delta);
+          if (!hideThinking) renderer.writeThinking(event.delta);
           break;
         case "thinking_end":
-          if (!hideThinking) renderer.write("</thinking>");
+          if (!hideThinking) renderer.endThinking();
           break;
         case "text":
-          renderer.write(event.delta);
+          renderer.writeText(event.delta);
           break;
         case "error":
           if (controller.signal.aborted) {
