@@ -191,7 +191,7 @@ export class AiService {
     }
 
     const agent = new Agent({
-      initialState: { model: modelLookup.value, thinkingLevel: "off" },
+      initialState: { model: modelLookup.value, thinkingLevel: "minimal" },
       getApiKey: () => config.apiKey,
     });
 

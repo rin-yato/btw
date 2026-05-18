@@ -33,6 +33,15 @@ export class ModelRegistryError extends Error {
 }
 ////////////////////////////////////////////////////////////////////////////////////
 
+const OPENCODE_STATIC_HEADERS = {
+  "User-Agent": "opencode/1.15.3",
+  Authorization: "Bearer public",
+  "x-opencode-client": "cli",
+  "x-opencode-session": "ses_01JQXYZ3K7MN0RSTUVWXYZabcd",
+  "x-opencode-request": "msg_01JQXYZ3K7MN0RSTUVWXYZefgh",
+  "x-opencode-project": "global",
+} as const;
+
 export class ModelRegistry {
   getModel(provider: string, modelId: string): Result<Model<never>, ModelRegistryError> {
     const custom = CUSTOM_MODELS[provider]?.[modelId];
@@ -60,6 +69,16 @@ export class ModelRegistry {
           meta: { provider, model: modelId },
         }),
       );
+    }
+
+    if (provider === "opencode") {
+      return ok({
+        ...resolved.value,
+        headers: {
+          ...resolved.value.headers,
+          ...OPENCODE_STATIC_HEADERS,
+        },
+      });
     }
 
     return ok(resolved.value);
