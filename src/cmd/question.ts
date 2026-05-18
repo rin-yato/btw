@@ -57,28 +57,36 @@ async function streamAnswer(
   const controller = new AbortController();
   process.on("SIGINT", () => controller.abort());
 
-  const stream = ai.streamQuestion(question, modelResult.value, {
-    signal: controller.signal,
-  });
-
   const renderer = new MarkdownRenderer();
 
-  for await (const event of stream) {
-    if (event.type === "error") {
-      if (controller.signal.aborted) {
-        renderer.end();
-        return;
+  await ai.streamQuestion(
+    question,
+    modelResult.value,
+    (event) => {
+      switch (event.type) {
+        case "thinking_start":
+          if (!hideThinking) renderer.write("<thinking>");
+          break;
+        case "thinking":
+          if (!hideThinking) renderer.write(event.delta);
+          break;
+        case "thinking_end":
+          if (!hideThinking) renderer.write("</thinking>");
+          break;
+        case "text":
+          renderer.write(event.delta);
+          break;
+        case "error":
+          if (controller.signal.aborted) {
+            renderer.end();
+            return;
+          }
+          process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
+          process.exit(1);
       }
-      process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
-      process.exit(1);
-    }
-    if (event.type === "thinking" && !hideThinking) {
-      process.stderr.write(pc.dim(event.delta));
-    }
-    if (event.type === "text") {
-      renderer.write(event.delta);
-    }
-  }
+    },
+    { signal: controller.signal },
+  );
 
   renderer.end();
 }

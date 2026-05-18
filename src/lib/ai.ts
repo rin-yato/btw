@@ -4,7 +4,8 @@ import type { JsonStoreError } from "@/lib/json-store";
 import { type ParsedModel, parseModelString } from "@/lib/model";
 import { ModelRegistry } from "@/lib/model-registry";
 
-import { type Model, stream } from "@earendil-works/pi-ai";
+import { Agent } from "@earendil-works/pi-agent-core";
+import type { Model } from "@earendil-works/pi-ai";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +75,9 @@ export type StreamError = AiError | ConfigError | JsonStoreError;
 
 export type StreamEvent =
   | { type: "text"; delta: string }
+  | { type: "thinking_start" }
   | { type: "thinking"; delta: string }
+  | { type: "thinking_end" }
   | { type: "error"; error: StreamError };
 
 export interface ModelConfig {
@@ -175,42 +178,51 @@ export class AiService {
     return ok(keyResult.value);
   }
 
-  async *streamQuestion(
+  async streamQuestion(
     question: string,
     config: ModelConfig,
+    onEvent: (event: StreamEvent) => void,
     opts?: { signal?: AbortSignal },
-  ): AsyncGenerator<StreamEvent, void, void> {
+  ): Promise<void> {
     const modelLookup = resolveModel(config.provider, config.model);
     if (isErr(modelLookup)) {
-      yield { type: "error", error: modelLookup.error };
+      onEvent({ type: "error", error: modelLookup.error });
       return;
     }
 
-    const s = stream(
-      modelLookup.value,
-      { messages: [{ role: "user" as const, content: question, timestamp: Date.now() }] },
-      { signal: opts?.signal, apiKey: config.apiKey || undefined },
-    );
+    const agent = new Agent({
+      initialState: { model: modelLookup.value, thinkingLevel: "off" },
+      getApiKey: () => config.apiKey,
+    });
 
-    try {
-      for await (const event of s) {
-        switch (event.type) {
-          case "text_delta":
-            yield { type: "text", delta: event.delta };
-            break;
-          case "thinking_delta":
-            yield { type: "thinking", delta: event.delta };
-            break;
-          case "error":
-            yield {
-              type: "error",
-              error: toAiError(event.error.errorMessage ?? "Unknown error"),
-            };
-            break;
-        }
+    opts?.signal?.addEventListener("abort", () => agent.abort(), { once: true });
+
+    agent.subscribe((event) => {
+      if (event.type !== "message_update") return;
+      const ev = event.assistantMessageEvent;
+      switch (ev.type) {
+        case "thinking_start":
+          onEvent({ type: "thinking_start" });
+          break;
+        case "thinking_delta":
+          onEvent({ type: "thinking", delta: ev.delta });
+          break;
+        case "thinking_end":
+          onEvent({ type: "thinking_end" });
+          break;
+        case "text_delta":
+          onEvent({ type: "text", delta: ev.delta });
+          break;
       }
-    } catch (e) {
-      yield { type: "error", error: toAiError(e) };
-    }
+    });
+
+    agent.prompt(question).catch((e) => {
+      console.error("Error during agent prompt:", e);
+      if (!opts?.signal?.aborted) {
+        onEvent({ type: "error", error: toAiError(e) });
+      }
+    });
+
+    await agent.waitForIdle();
   }
 }
