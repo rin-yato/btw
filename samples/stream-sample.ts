@@ -9,8 +9,16 @@ function delay(ms: number): Promise<void> {
 
 async function main() {
   const md = readFileSync(join(import.meta.dir, "sample.md"), "utf-8");
+  const thinking = readFileSync(join(import.meta.dir, "thinking.md"), "utf-8");
 
   const renderer = new MarkdownRenderer();
+
+  renderer.startThinking();
+  for (const char of thinking) {
+    renderer.writeThinking(char);
+    await delay(10);
+  }
+  renderer.endThinking();
 
   for (const char of md) {
     renderer.write(char);

@@ -1,17 +1,3 @@
-<thinking>Now I'm thinking about how to structure the response.
-I need to consider mixed formatting and edge cases.
-
-Here's what I'm planning:
-
-1. Start with the type definitions
-2. Then implement the core `validate()` function
-3. Finally add the error handling
-
-Wait, let me reconsider. Maybe I should use `Result` types here
-instead of throwing exceptions. The `parse()` method already returns
-an `Option<T>` so we can chain with `.map()`.
-</thinking>
-
 # Markdown Renderer Sample
 
 This is a paragraph with **bold text**, *italic text*, and `inline code`.
@@ -69,13 +55,6 @@ def fibonacci(n: int) -> int:
  }
 ```
 
-<thinking>
-Let me think about this carefully.
-
-The user is asking a complex question that requires step-by-step reasoning.
-I should break this down into smaller parts. First, I need to consider the
-edge cases with `null` values and the `parse()` function.
-</thinking>
 ---
 
 ## Mixed Content
