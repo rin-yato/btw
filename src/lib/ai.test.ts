@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -17,6 +17,8 @@ mock.module("@earendil-works/pi-ai", () => ({
   getModel: (provider: string, model: string) => {
     if (provider === "openai" && model === "gpt-4o-mini") return { id: model, provider };
     if (provider === "anthropic" && model === "claude-sonnet-4-20250514")
+      return { id: model, provider };
+    if (provider === "opencode" && model === "deepseek-v4-flash-free")
       return { id: model, provider };
     return undefined;
   },
@@ -93,15 +95,19 @@ afterEach(() => {
 });
 
 describe("getModelConfig", () => {
-  test("returns no-model error when no config file and no override", async () => {
+  test("uses default opencode model when no config file and no override", async () => {
     const result = await ai.getModelConfig();
-    expect(isErr(result)).toBe(true);
-    if (isErr(result)) {
-      expect(result.error.reason).toBe("no-model");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual({
+        provider: "opencode",
+        model: "deepseek-v4-flash-free",
+        apiKey: "public",
+      });
     }
   });
 
-  test("accepts an override even without a config file", async () => {
+  test("accepts an override even without a config file (fails on auth)", async () => {
     const result = await ai.getModelConfig("openai:gpt-4o-mini");
     expect(isErr(result)).toBe(true);
     if (isErr(result)) {
@@ -160,6 +166,69 @@ describe("getModelConfig", () => {
       expect(result.error.reason).toBe("model-not-found");
     }
   });
+
+  test("resolves opencode provider with public key when no auth file", async () => {
+    const result = await ai.getModelConfig("opencode:deepseek-v4-flash-free");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual({
+        provider: "opencode",
+        model: "deepseek-v4-flash-free",
+        apiKey: "public",
+      });
+    }
+  });
+
+  test("resolves opencode provider with public key when auth file has no key", async () => {
+    await ai.auth.setApiKey("other", "sk-other");
+    const result = await ai.getModelConfig("opencode:deepseek-v4-flash-free");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual({
+        provider: "opencode",
+        model: "deepseek-v4-flash-free",
+        apiKey: "public",
+      });
+    }
+  });
+
+  test("still uses explicit opencode API key when set", async () => {
+    await ai.auth.setApiKey("opencode", "sk-opencode-custom");
+    const result = await ai.getModelConfig("opencode:deepseek-v4-flash-free");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual({
+        provider: "opencode",
+        model: "deepseek-v4-flash-free",
+        apiKey: "sk-opencode-custom",
+      });
+    }
+  });
+
+  test("works with default constructor", async () => {
+    const tmpDefaultDir = mkdtempSync(join(tmpdir(), "ai-default-test-"));
+    const origConfigHome = process.env.XDG_CONFIG_HOME;
+    const origCacheHome = process.env.XDG_CACHE_HOME;
+    process.env.XDG_CONFIG_HOME = join(tmpDefaultDir, "xconfig");
+    process.env.XDG_CACHE_HOME = join(tmpDefaultDir, "xcache");
+    mkdirSync(join(tmpDefaultDir, "xconfig", "btw"), { recursive: true });
+    mkdirSync(join(tmpDefaultDir, "xcache", "btw"), { recursive: true });
+
+    const defaultAi = new AiService();
+    const result = await defaultAi.getModelConfig("opencode:deepseek-v4-flash-free");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual({
+        provider: "opencode",
+        model: "deepseek-v4-flash-free",
+        apiKey: "public",
+      });
+    }
+
+    process.env.XDG_CONFIG_HOME = origConfigHome;
+    process.env.XDG_CACHE_HOME = origCacheHome;
+    rmSync(tmpDefaultDir, { recursive: true, force: true });
+  });
 });
 
 describe("streamQuestion", () => {
@@ -179,16 +248,21 @@ describe("streamQuestion", () => {
   });
 
   test("fires error event when prompt rejects", async () => {
+    const origConsoleError = console.error;
+    console.error = () => {};
     _promptReject = new Error("401 Unauthorized");
 
     const events: StreamEvent[] = [];
     await ai.streamQuestion("Hello", config, (e) => events.push(e));
 
+    console.error = origConsoleError;
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ type: "error" });
   });
 
   test("does not fire error when signal is aborted", async () => {
+    const origConsoleError = console.error;
+    console.error = () => {};
     _promptReject = new Error("aborted");
 
     const controller = new AbortController();
@@ -200,6 +274,7 @@ describe("streamQuestion", () => {
     controller.abort();
     await promise;
 
+    console.error = origConsoleError;
     expect(events).toHaveLength(0);
   });
 });

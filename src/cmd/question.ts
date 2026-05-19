@@ -1,7 +1,5 @@
 import { AiService } from "@/lib/ai";
-import { AUTH_FILENAME, AuthService, getAuthDir } from "@/lib/auth";
-import { CONFIG_FILENAME, ConfigService, getConfigDir } from "@/lib/config";
-import { JsonStore } from "@/lib/json-store";
+import { ConfigService } from "@/lib/config";
 import { MarkdownRenderer, ThinkingRenderer } from "@/lib/markdown";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
@@ -39,13 +37,8 @@ export async function streamAnswer(
     thinking?: ThinkingRendererLike;
   } = {},
 ): Promise<void> {
-  const configService = new ConfigService(
-    new JsonStore({ dir: getConfigDir(), filename: CONFIG_FILENAME }),
-  );
-  const authService = new AuthService(
-    new JsonStore({ dir: getAuthDir(), filename: AUTH_FILENAME }),
-  );
-  const ai = new AiService(configService, authService);
+  const configService = new ConfigService();
+  const ai = new AiService();
 
   const configResult = await configService.readConfig();
   if (isErr(configResult)) {

@@ -40,6 +40,22 @@ describe("getApiKey", () => {
       expect(result.value).toBeNull();
     }
   });
+
+  test("returns ok(null) with default constructor and no file", async () => {
+    const tmpDefaultDir = mkdtempSync(join(tmpdir(), "auth-default-test-"));
+    const origHome = process.env.HOME;
+    process.env.HOME = tmpDefaultDir;
+
+    const defaultAuth = new AuthService();
+    const result = await defaultAuth.getApiKey("openai");
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toBeNull();
+    }
+
+    process.env.HOME = origHome;
+    rmSync(tmpDefaultDir, { recursive: true, force: true });
+  });
 });
 
 describe("setApiKey", () => {

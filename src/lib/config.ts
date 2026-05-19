@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import type { JsonStore, JsonStoreError } from "@/lib/json-store";
+import { JsonStore, type JsonStoreError } from "@/lib/json-store";
 import { ModelStringSchema } from "@/lib/model";
 import { mergeObjects } from "@/lib/utils";
 
@@ -43,6 +43,7 @@ export class ConfigError extends Error {
 ////////////////////////////////////////////////////////////////////////////////
 
 const DEFAULTS: ConfigSchema = {
+  model: "opencode:deepseek-v4-flash-free",
   showThinking: true,
 };
 
@@ -63,7 +64,12 @@ export function getConfigPath(): string {
 }
 
 export class ConfigService {
-  constructor(private store: JsonStore) {}
+  constructor(
+    private store: JsonStore = new JsonStore({
+      dir: getConfigDir(),
+      filename: CONFIG_FILENAME,
+    }),
+  ) {}
 
   async readConfig(): Promise<Result<ConfigSchema, ConfigError | JsonStoreError>> {
     const result = await this.store.read();

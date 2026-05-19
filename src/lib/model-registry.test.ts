@@ -25,29 +25,11 @@ mock.module("@earendil-works/pi-ai", () => ({
 const registry = new ModelRegistry();
 
 describe("getModel", () => {
-  test("returns custom model when it exists", () => {
-    const result = registry.getModel("opencode", "deepseek-v4-flash-free");
-    expect(isOk(result)).toBe(true);
-    if (isOk(result)) {
-      expect(result.value.id).toBe("deepseek-v4-flash-free");
-      expect(result.value.provider).toBe("opencode");
-    }
-  });
-
   test("falls through to pi-ai when no custom model matches", () => {
     const result = registry.getModel("openai", "gpt-4o-mini");
     expect(isOk(result)).toBe(true);
     if (isOk(result)) {
       expect(result.value.id).toBe("gpt-4o-mini");
-    }
-  });
-
-  test("custom model takes precedence over pi-ai when ids collide", () => {
-    const result = registry.getModel("opencode", "deepseek-v4-flash-free");
-    expect(isOk(result)).toBe(true);
-    if (isOk(result)) {
-      expect(result.value.id).toBe("deepseek-v4-flash-free");
-      expect(result.value.provider).toBe("opencode");
     }
   });
 
@@ -63,24 +45,16 @@ describe("getModel", () => {
 });
 
 describe("listModels", () => {
-  test("merges custom models with pi-ai models for opencode", () => {
+  test("returns pi-ai models for opencode when no custom models", () => {
     const models = registry.listModels("opencode");
     const ids = models.map((m) => m.id);
-    expect(ids).toContain("big-pickle");
-    expect(ids).toContain("deepseek-v4-flash-free");
+    expect(ids).toEqual(["big-pickle"]);
   });
 
   test("returns only pi-ai models for provider without custom models", () => {
     const models = registry.listModels("openai");
     expect(models).toHaveLength(1);
     expect(models[0]?.id).toBe("gpt-4o-mini");
-  });
-
-  test("deduplicates when custom model id matches a pi-ai model", () => {
-    const models = registry.listModels("opencode");
-    const ids = models.map((m) => m.id);
-    const deduped = new Set(ids);
-    expect(ids.length).toBe(deduped.size);
   });
 
   test("returns empty array for unknown provider", () => {

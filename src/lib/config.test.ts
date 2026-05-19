@@ -25,6 +25,7 @@ afterEach(() => {
 describe("getDefaults", () => {
   test("returns the default config", () => {
     expect(getDefaults()).toEqual({
+      model: "opencode:deepseek-v4-flash-free",
       showThinking: true,
     });
   });
@@ -60,6 +61,22 @@ describe("readConfig", () => {
     if (isOk(result)) {
       expect(result.value).toEqual(getDefaults());
     }
+  });
+
+  test("returns ok(defaults) with default constructor and no file", async () => {
+    const tmpDefaultDir = mkdtempSync(join(tmpdir(), "config-default-test-"));
+    const origHome = process.env.HOME;
+    process.env.HOME = tmpDefaultDir;
+
+    const defaultConfig = new ConfigService();
+    const result = await defaultConfig.readConfig();
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) {
+      expect(result.value).toEqual(getDefaults());
+    }
+
+    process.env.HOME = origHome;
+    rmSync(tmpDefaultDir, { recursive: true, force: true });
   });
 
   test("returns ok(config) when valid file exists", async () => {

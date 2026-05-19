@@ -45,7 +45,7 @@
     "btw": "bun src/index.ts",
     "render:sample": "bun samples/sample-renderer.ts",
     "stream:sample": "bun samples/stream-sample.ts",
-    "build": "bun build --minify --target node --outdir dist src/index.ts",
+    "build": "bun build --minify --splitting --target node --outdir dist src/index.ts",
     "check": "biome check",
     "check:fix": "biome check --write --unsafe",
     "test": "bun test",

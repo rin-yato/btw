@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import type { JsonStore, JsonStoreError } from "@/lib/json-store";
+import { JsonStore, type JsonStoreError } from "@/lib/json-store";
 import { mergeObjects } from "@/lib/utils";
 
 import { isErr, ok, type Result } from "@justmiracle/result";
@@ -22,7 +22,12 @@ export function getAuthPath(): string {
 }
 
 export class AuthService {
-  constructor(private store: JsonStore) {}
+  constructor(
+    private store: JsonStore = new JsonStore({
+      dir: getAuthDir(),
+      filename: AUTH_FILENAME,
+    }),
+  ) {}
 
   async getApiKey(provider: string): Promise<Result<string | null, JsonStoreError>> {
     const result = await this.store.read();

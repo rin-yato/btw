@@ -99,7 +99,7 @@ export class MarkdownRenderer {
         this.#buffer = "";
       }
     }
-    this.#stream.write("\n\n");
+    this.#stream.write("\n");
   }
 
   // ── private: text path ──────────────────────────────────────────────

@@ -1,5 +1,5 @@
-import type { AuthService } from "@/lib/auth";
-import type { ConfigError, ConfigSchema, ConfigService } from "@/lib/config";
+import { AuthService } from "@/lib/auth";
+import { type ConfigError, type ConfigSchema, ConfigService } from "@/lib/config";
 import type { JsonStoreError } from "@/lib/json-store";
 import { type ParsedModel, parseModelString } from "@/lib/model";
 import { ModelRegistry } from "@/lib/model-registry";
@@ -105,8 +105,8 @@ function resolveModel(provider: string, model: string): Result<Model<never>, AiE
 
 export class AiService {
   constructor(
-    readonly config: ConfigService,
-    readonly auth: AuthService,
+    readonly config: ConfigService = new ConfigService(),
+    readonly auth: AuthService = new AuthService(),
   ) {}
 
   async getModelConfig(
@@ -163,9 +163,17 @@ export class AiService {
     provider: string,
   ): Promise<Result<string, JsonStoreError | AiError>> {
     const keyResult = await this.auth.getApiKey(provider);
-    if (isErr(keyResult)) return keyResult;
+    if (isErr(keyResult)) {
+      if (keyResult.error.reason === "not-found" && provider === "opencode")
+        // opencode models can be accessed with a public key
+        return ok("public");
+      return keyResult;
+    }
 
     if (!keyResult.value) {
+      // opencode models can be accessed with a public key
+      if (provider === "opencode") return ok("public");
+
       return err(
         new AiError({
           reason: "authentication",
