@@ -51,7 +51,7 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "ci": "bun run check && bun run typecheck && bun test && bun run build",
-    "release": "release-it",
+    "release": "release-it patch",
     "release:minor": "release-it minor",
     "release:major": "release-it major"
   },

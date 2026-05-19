@@ -8,6 +8,8 @@ import { Agent } from "@earendil-works/pi-agent-core";
 import type { Model } from "@earendil-works/pi-ai";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 
+import { DEFAULT_PROMPT } from "./prompt";
+
 ////////////////////////////////////////////////////////////////////////////////////
 const REASON_MESSAGES = {
   "api-error": "API request failed",
@@ -201,11 +203,7 @@ export class AiService {
     const agent = new Agent({
       initialState: {
         model: modelLookup.value,
-        systemPrompt: [
-          "You are an assistant in the terminal. User will ask you questions from their cli.",
-          "Answer concisely and clearly, make sure your response is suitable for terminal display.",
-          "If the user asks you to perform a task, respond with the steps you would take to complete the task.",
-        ].join(" "),
+        systemPrompt: DEFAULT_PROMPT,
       },
       getApiKey: () => config.apiKey,
     });
