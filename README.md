@@ -2,19 +2,27 @@
 
 AI answers in your terminal.
 
+Asks a **Question** → Gets an **Answer** (with optional **Thinking**). That's it.
+
+> **Note:** `btw`, `qq`, and `q` all run the same tool — use whichever is shortest.
+
+## Install
+
+```bash
+npm install -g @notyato/btw
+bun add -g @notyato/btw
+```
+
 ## Quick start
 
 ```bash
-# Install
-npm install -g btw
-
-# Connect to a provider and store your API key
+# 1. Connect to a provider and store your API key
 btw connect
 
-# Pick a default model (required)
+# 2. Pick a default model
 btw model
 
-# Ask anything
+# 3. Ask anything
 btw "what is 2+2"
 btw "how do I update a dep to latest with bun"
 ```
@@ -37,7 +45,7 @@ btw --version           Print version
 | `--no-thinking` | Hide thinking/reasoning output |
 | `--model <provider:model>` | Override the model for this question |
 
-## Model override
+### Model override
 
 Run any question with a different model, no reconfiguration needed:
 
@@ -52,12 +60,6 @@ btw --model opencode:deepseek-v4-flash-free "explain quantum computing"
 
 After setup, just ask questions. Your default model is used automatically.
 
-## About
-
-**btw** is a single-question, single-answer CLI. No threads, no sessions — just a question and an answer, streamed to your terminal. Supports any provider from `@earendil-works/pi-ai`.
-
-The names `btw`, `qq`, and `q` all run the same tool — use whichever is shortest.
-
 ## Configuration
 
 | Data | Path |
@@ -65,10 +67,19 @@ The names `btw`, `qq`, and `q` all run the same tool — use whichever is shorte
 | Config (model, preferences) | `~/.config/btw/config.json` |
 | Credentials (API keys) | `~/.cache/btw/auth.json` |
 
-## Development
+## Features
+
+- **Streaming Markdown renderer** — headings, code blocks with syntax highlighting, tables, blockquotes, lists, links (OSC-8 hyperlinks), and more
+- **Thinking/Reasoning support** — model chain-of-thought rendered in dim text on stderr (`--no-thinking` to hide)
+- **Inline & Interactive modes** — pass a question as an argument or open a multiline prompt
+- **Custom model override** — `--model provider:id` for one-shot model switching without reconfiguration
+
+## Contributing
+
+Contributions are welcome! See [CONTEXT.md](CONTEXT.md) for the domain language and [AGENTS.md](AGENTS.md) for architecture and conventions.
 
 ```bash
-git clone <url>
+git clone git@github.com:rin-yato/btw.git
 cd btw
 bun install
 bun run dev          # run the CLI
@@ -80,4 +91,4 @@ bun run ci           # lint → typecheck → test → build
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

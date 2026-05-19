@@ -1,8 +1,40 @@
 {
-  "name": "btw",
-  "version": "0.1.0",
+  "name": "@notyato/btw",
+  "version": "0.0.0",
+  "description": "AI answers in your terminal. Single-question, single-answer CLI that streams AI responses with full Markdown rendering.",
+  "keywords": [
+    "ai",
+    "cli",
+    "terminal",
+    "llm",
+    "chat",
+    "assistant",
+    "markdown",
+    "streaming"
+  ],
+  "homepage": "https://github.com/rin-yato/btw#readme",
+  "bugs": {
+    "url": "https://github.com/rin-yato/btw/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Rin Yato"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rin-yato/btw.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "module": "index.ts",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "bin": {
     "btw": "dist/index.js",
     "qq": "dist/index.js",
@@ -18,11 +50,38 @@
     "check:fix": "biome check --write --unsafe",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "ci": "bun run check && bun run typecheck && bun test && bun run build"
+    "ci": "bun run check && bun run typecheck && bun test && bun run build",
+    "release": "release-it",
+    "release:minor": "release-it minor",
+    "release:major": "release-it major"
+  },
+  "release-it": {
+    "git": {
+      "tagName": "v${version}",
+      "commitMessage": "chore(release): v${version}",
+      "requireBranch": "main"
+    },
+    "github": {
+      "release": true,
+      "web": true,
+      "releaseName": "v${version}"
+    },
+    "npm": {
+      "release": false,
+      "publish": false
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": "conventionalcommits",
+        "infile": "CHANGELOG.md"
+      }
+    }
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "@types/bun": "latest"
+    "@release-it/conventional-changelog": "^11.0.0",
+    "@types/bun": "latest",
+    "release-it": "^20.0.1"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
