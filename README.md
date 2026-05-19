@@ -2,6 +2,8 @@
 
 AI answers in your terminal.
 
+https://github.com/user-attachments/assets/47880a03-6207-4b6c-a8bb-7f781988cec1
+
 Asks a **Question** → Gets an **Answer** (with optional **Thinking**). That's it.
 
 > **Note:** `btw`, `qq`, and `q` all run the same tool — use whichever is shortest.
@@ -16,16 +18,18 @@ bun add -g @notyato/btw
 ## Quick start
 
 ```bash
-# 1. Connect to a provider and store your API key
-btw connect
-
-# 2. Pick a default model
-btw model
-
-# 3. Ask anything
+# Ask anything - no setup required
 btw "what is 2+2"
 btw "how do I update a dep to latest with bun"
+
+# Add provider
+btw connect
+
+# Select model
+btw model
 ```
+
+The default model (`opencode:deepseek-v4-flash-free`) works out of the box with no API key. To use other providers, run `btw connect` and `btw model`.
 
 ## Usage
 
@@ -55,10 +59,10 @@ btw --model opencode:deepseek-v4-flash-free "explain quantum computing"
 
 ## Setup
 
+To use a different provider and model:
+
 1. **`btw connect`** — pick a provider and enter your API key. This stores a credential and makes that provider's models available.
 2. **`btw model`** — choose a default model from your connected providers.
-
-After setup, just ask questions. Your default model is used automatically.
 
 ## Configuration
 
