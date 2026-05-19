@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/rin-yato/btw/compare/v0.1.0...v0.1.1) (2026-05-19)
+
+### Features
+
+* default config ([df5d3fe](https://github.com/rin-yato/btw/commit/df5d3fe8efdc3c24bc33cb13a0af38631ff832d2))
+* prompting ([8483276](https://github.com/rin-yato/btw/commit/84832764f302f881c4dd9e1b57bf86ae9919806e))
+
 ## 0.1.0 (2026-05-19)
 
 ### Features

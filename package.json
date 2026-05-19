@@ -1,6 +1,6 @@
 {
   "name": "@notyato/btw",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI answers in your terminal. Single-question, single-answer CLI that streams AI responses with full Markdown rendering.",
   "keywords": [
     "ai",
