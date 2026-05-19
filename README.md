@@ -29,8 +29,6 @@ btw connect
 btw model
 ```
 
-The default model (`opencode:deepseek-v4-flash-free`) works out of the box with no API key. To use other providers, run `btw connect` and `btw model`.
-
 ## Usage
 
 ```
@@ -75,23 +73,8 @@ To use a different provider and model:
 
 - **Streaming Markdown renderer** — headings, code blocks with syntax highlighting, tables, blockquotes, lists, links (OSC-8 hyperlinks), and more
 - **Thinking/Reasoning support** — model chain-of-thought rendered in dim text on stderr (`--no-thinking` to hide)
-- **Inline & Interactive modes** — pass a question as an argument or open a multiline prompt
+- **Inline & ~~Interactive modes~~** — pass a question as an argument or open a multiline prompt
 - **Custom model override** — `--model provider:id` for one-shot model switching without reconfiguration
-
-## Contributing
-
-Contributions are welcome! See [CONTEXT.md](CONTEXT.md) for the domain language and [AGENTS.md](AGENTS.md) for architecture and conventions.
-
-```bash
-git clone git@github.com:rin-yato/btw.git
-cd btw
-bun install
-bun run dev          # run the CLI
-bun test             # run tests
-bun run check        # biome lint
-bun run typecheck    # tsc --noEmit
-bun run ci           # lint → typecheck → test → build
-```
 
 ## License
 
