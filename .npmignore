@@ -9,6 +9,7 @@ bin/
 tsconfig.json
 biome.json
 bun.lockb
+bun.lock
 
 # Development files
 .git/

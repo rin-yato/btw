@@ -15,14 +15,20 @@ permissions:
   contents: read
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   npm:
     name: Publish to npm
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.publish_npm)
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
@@ -38,4 +44,4 @@ jobs:
         run: bun run build
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --provenance

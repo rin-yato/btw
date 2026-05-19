@@ -18,7 +18,8 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Rin Yato"
+    "name": "Rin Yato",
+    "url": "https://github.com/rin-yato"
   },
   "repository": {
     "type": "git",
@@ -30,8 +31,15 @@
   "publishConfig": {
     "access": "public"
   },
-  "module": "index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -81,7 +89,8 @@
     "@biomejs/biome": "^2.4.15",
     "@release-it/conventional-changelog": "^11.0.0",
     "@types/bun": "latest",
-    "release-it": "^20.0.1"
+    "release-it": "^20.0.1",
+    "typescript": "6.0.3"
   },
   "dependencies": {
     "@clack/prompts": "^1.4.0",
@@ -92,7 +101,6 @@
     "marked": "^18.0.4",
     "picocolors": "^1.1.1",
     "remeda": "^2.34.1",
-    "typescript": "6.0.3",
     "valibot": "^1.4.0",
     "wrap-ansi": "^10.0.0"
   }
