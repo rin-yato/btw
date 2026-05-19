@@ -1,0 +1,30 @@
+# Changelog
+
+## 0.1.0 (2026-05-19)
+
+### Features
+
+* add AI service with typed error streaming ([2caa5de](https://github.com/rin-yato/btw/commit/2caa5de253b904617db3c57ac6d412ed2b3617a2))
+* add auth service and mergeObjects util ([1be1401](https://github.com/rin-yato/btw/commit/1be140186589ea62d7127657388cc32d452f4d5b))
+* add clack and picocolors ([7083357](https://github.com/rin-yato/btw/commit/7083357bb9ddee07893a17a4150bfbe6bcdca198))
+* add cmd/ directory with connect command and placeholders ([d85c2b6](https://github.com/rin-yato/btw/commit/d85c2b647310e78207335458c698944a75fd0ef7))
+* add lint and format ([9104e32](https://github.com/rin-yato/btw/commit/9104e320d2162e177c686968aa13f87079ca664d))
+* add model cmd ([587bf7d](https://github.com/rin-yato/btw/commit/587bf7d38933fe5aa189204a61c2ca37e2795553))
+* add opencode static header ([2c0a14e](https://github.com/rin-yato/btw/commit/2c0a14e50de81c3474c0b95f654145702d10af56))
+* add sample markdown renderer ([9d6e4e4](https://github.com/rin-yato/btw/commit/9d6e4e42fb8d00aa392455ff36332fb87cf44f8d))
+* add syntax highlighting for code blocks ([e014083](https://github.com/rin-yato/btw/commit/e014083a6153f0b93dec5c9e32e13aa705ebf955))
+* better markdown streamer ([59f0f4f](https://github.com/rin-yato/btw/commit/59f0f4f14cc00026e8b7455bbc275d6cc71ebd3e))
+* better thinking stream ([2aef0ed](https://github.com/rin-yato/btw/commit/2aef0edb902d4f2c6b12b7c38af4cf4f90aea7e2))
+* config and auth ([d297ef6](https://github.com/rin-yato/btw/commit/d297ef68fef829bdb869df7dca8c7fd7325c87f4))
+* custom model registry ([56df707](https://github.com/rin-yato/btw/commit/56df70718954a2adbd5619ce749532d08daa5bc3))
+* fix thinking ([c14acb4](https://github.com/rin-yato/btw/commit/c14acb480d89ac6c803b0aa59cd5d2934515acea))
+* fold readQuestion into askQuestion, clean up scratch docs ([7d1af8a](https://github.com/rin-yato/btw/commit/7d1af8a0ab7c48275ac6d073275f6d4de22b7976))
+* improving thinking streaming ([4fb76b4](https://github.com/rin-yato/btw/commit/4fb76b4935bf46aef4e6f0fe5e94146c76e1a053))
+* initial spec and issue 1 ([53d1e92](https://github.com/rin-yato/btw/commit/53d1e92138ee4b9231f6f9d4a7bc006605134200))
+* inline readQuestion into cmd/question, remove input.ts ([baef560](https://github.com/rin-yato/btw/commit/baef56078cb1df86f001328f5cd269e737ac1ded))
+* migrate to biome ([6a90cf6](https://github.com/rin-yato/btw/commit/6a90cf63e6a484362ddf35b238e11a319554afe3))
+* refactor 01 ([5e22d0c](https://github.com/rin-yato/btw/commit/5e22d0c90fcb8cb37a3493832414c5bac3461bdf))
+* refactor 02 ([dd10c2e](https://github.com/rin-yato/btw/commit/dd10c2ee94c59dcda93611a7d4a9ef037363dd82))
+* refactor CLI to discriminated union with Result return, type error dispatch ([6fcc7fb](https://github.com/rin-yato/btw/commit/6fcc7fb2acd9f5c0d35235d7831434d04c6bde53))
+* render blockquotes, lists, tables, and thinking blocks in markdown ([8cf8eee](https://github.com/rin-yato/btw/commit/8cf8eee9b94c5f593922bed270e7497d5d3405f1))
+* rewrite index.ts as thin dispatch, delete old modules, move question to cmd/ ([7111cc4](https://github.com/rin-yato/btw/commit/7111cc45ff0eaef32dfb40d01646314cbcaf24a5))
