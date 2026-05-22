@@ -11,6 +11,7 @@ import * as v from "valibot";
 const ConfigValidator = v.object({
   model: v.optional(ModelStringSchema),
   showThinking: v.boolean(),
+  session: v.optional(v.picklist(["global", "per-terminal"]), "global"),
 });
 
 export type ConfigSchema = v.InferOutput<typeof ConfigValidator>;
@@ -45,6 +46,7 @@ export class ConfigError extends Error {
 const DEFAULTS: ConfigSchema = {
   model: "opencode:deepseek-v4-flash-free",
   showThinking: true,
+  session: "global",
 };
 
 export function getDefaults(): ConfigSchema {

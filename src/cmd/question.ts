@@ -1,10 +1,13 @@
 import { AiService } from "@/lib/ai";
 import { ConfigService } from "@/lib/config";
 import { MarkdownRenderer, ThinkingRenderer } from "@/lib/markdown";
+import { SessionService } from "@/lib/session";
 
 import { cancel, isCancel, multiline } from "@clack/prompts";
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 import pc from "picocolors";
+import { constant, isString, pipe, when } from "remeda";
 
 export async function readQuestion(): Promise<Result<string, void>> {
   const question = await multiline({
@@ -39,6 +42,7 @@ export async function streamAnswer(
 ): Promise<void> {
   const configService = new ConfigService();
   const ai = new AiService();
+  const sessions = new SessionService();
 
   const configResult = await configService.readConfig();
   if (isErr(configResult)) {
@@ -54,6 +58,20 @@ export async function streamAnswer(
     process.exit(1);
   }
 
+  const sessionId = sessions.getSessionId(configResult.value.session ?? "global");
+  const loadResult = await pipe(
+    sessionId,
+    when(isString, {
+      onTrue: (id) => sessions.loadMessages(id),
+      onFalse: constant(ok([] as AgentMessage[])),
+    }),
+  );
+
+  if (isErr(loadResult)) {
+    process.stderr.write(`\n${pc.red("Session error:")} ${loadResult.error.message}\n`);
+  }
+  const priorMessages = isErr(loadResult) ? [] : loadResult.value;
+
   const controller = new AbortController();
   process.on("SIGINT", () => controller.abort());
 
@@ -61,15 +79,13 @@ export async function streamAnswer(
   const thinkingRenderer = hideThinking
     ? undefined
     : (renderers.thinking ?? new ThinkingRenderer());
-  let thinkingOpen = false;
 
-  await ai.streamQuestion(
+  const messages = await ai.streamQuestion(
     question,
     modelResult.value,
     (event) => {
       switch (event.type) {
         case "thinking_start":
-          thinkingOpen = true;
           thinkingRenderer?.start();
           break;
         case "thinking":
@@ -77,26 +93,28 @@ export async function streamAnswer(
           break;
         case "thinking_end":
           thinkingRenderer?.end();
-          thinkingOpen = false;
           break;
         case "text":
           renderer.writeText(event.delta);
           break;
         case "error":
-          if (controller.signal.aborted) {
-            if (thinkingOpen) thinkingRenderer?.end();
-            renderer.end();
-            return;
+          if (!controller.signal.aborted) {
+            process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
+            process.exit(1);
           }
-          process.stderr.write(`\n${pc.red("Error:")} ${event.error.message}\n`);
-          process.exit(1);
       }
     },
-    { signal: controller.signal },
+    { signal: controller.signal, priorMessages },
   );
 
-  if (thinkingOpen) thinkingRenderer?.end();
   renderer.end();
+
+  if (sessionId) {
+    const saveResult = await sessions.saveMessages(sessionId, messages);
+    if (isErr(saveResult)) {
+      process.stderr.write(`\n${pc.red("Session error:")} ${saveResult.error.message}\n`);
+    }
+  }
 }
 
 export async function questionCmd(

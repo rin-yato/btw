@@ -29,15 +29,21 @@ btw connect
 btw model
 ```
 
+Sessions are automatic — every question builds on the previous one in a shared global context.
+
 ## Usage
 
 ```
-btw <question>          Ask a question (inline mode)
-btw                     Open multiline input (interactive mode)
-btw connect             Store an API key for a provider
-btw model               Set your default model
-btw --help              Show help
-btw --version           Print version
+btw <question>            Ask a question (inline mode)
+btw                       Open multiline input (interactive mode)
+btw connect               Store an API key for a provider
+btw model                 Set your default model
+btw shell                 Print export BTW_SESSION_ID for per-terminal sessions
+btw shell --install       Add session init to your shell config
+btw session global        Switch to global session mode
+btw session per-terminal  Switch to per-terminal session mode
+btw --help                Show help
+btw --version             Print version
 ```
 
 ### Options
@@ -55,6 +61,17 @@ Run any question with a different model, no reconfiguration needed:
 btw --model opencode:deepseek-v4-flash-free "explain quantum computing"
 ```
 
+## Sessions
+
+btw keeps a conversation history so each question sees prior context.
+
+| Mode | Behavior |
+|------|----------|
+| **Global** (default) | All questions share one session stored in `~/.config/btw/sessions/GLOBAL.json`. Run `btw session global` to switch here. |
+| **Per-terminal** | Each terminal gets its own session identified by `BTW_SESSION_ID`. Run `btw session per-terminal` to enable, then add `eval $(btw shell)` to your shell config (or use `btw shell --install`). |
+
+Session errors never interrupt your question — warnings are logged and btw continues without context.
+
 ## Setup
 
 To use a different provider and model:
@@ -68,6 +85,8 @@ To use a different provider and model:
 |------|------|
 | Config (model, preferences) | `~/.config/btw/config.json` |
 | Credentials (API keys) | `~/.cache/btw/auth.json` |
+| Session data | `~/.config/btw/sessions/GLOBAL.json` |
+| Per-terminal sessions | `~/.cache/btw/sessions/{ulid}.json` |
 
 ## Features
 
@@ -75,6 +94,7 @@ To use a different provider and model:
 - **Thinking/Reasoning support** — model chain-of-thought rendered in dim text on stderr (`--no-thinking` to hide)
 - **Inline & ~~Interactive modes~~** — pass a question as an argument or open a multiline prompt
 - **Custom model override** — `--model provider:id` for one-shot model switching without reconfiguration
+- **Conversation sessions** — automatic global context by default, per-terminal opt-in via `btw session`
 
 ## License
 

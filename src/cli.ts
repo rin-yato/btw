@@ -6,6 +6,7 @@ import packageJson from "../package.json";
 const REASON_MESSAGES = {
   "invalid-flag": "Invalid flag value",
   "missing-value": "Flag requires a value",
+  "invalid-subcommand": "Invalid subcommand",
 } as const;
 
 type CliErrorReason = keyof typeof REASON_MESSAGES;
@@ -33,6 +34,8 @@ export type ParsedArgs =
   | { mode: "version" }
   | { mode: "connect" }
   | { mode: "model" }
+  | { mode: "shell"; install: boolean }
+  | { mode: "session"; action: "global" | "per-terminal" }
   | { mode: "no-args"; noThinking: boolean; modelOverride?: string }
   | { mode: "question"; question: string; noThinking: boolean; modelOverride?: string };
 
@@ -74,6 +77,7 @@ function parseModelFlag(args: string[]): Result<ModelFlag | undefined, CliError>
 function buildPositional(args: string[], modelFlag: ModelFlag | undefined): string[] {
   return args.filter((a, i) => {
     if (a === "--no-thinking") return false;
+    if (a === "--install") return false;
     if (modelFlag && (i === modelFlag.index || i === modelFlag.index + 1)) return false;
     return true;
   });
@@ -96,6 +100,24 @@ export function parseArgs(argv: string[]): Result<ParsedArgs, CliError> {
   if (positional[0] === "connect") return ok({ mode: "connect" });
   if (positional[0] === "model") return ok({ mode: "model" });
 
+  if (positional[0] === "shell") {
+    return ok({ mode: "shell", install: args.includes("--install") });
+  }
+
+  if (positional[0] === "session") {
+    const action = positional[1];
+    if (action !== "global" && action !== "per-terminal") {
+      return err(
+        new CliError({
+          reason: "invalid-subcommand",
+          message: `btw session expects "global" or "per-terminal", got "${action ?? "nothing"}"`,
+          meta: { action },
+        }),
+      );
+    }
+    return ok({ mode: "session", action });
+  }
+
   if (positional.length > 0) {
     return ok({
       mode: "question",
@@ -112,14 +134,18 @@ export function printHelp(): void {
   console.log(`btw — AI answers in your terminal
 
 Usage:
-  btw <question>          Ask a question
-  btw                     Open multiline input
-  btw connect             Set up AI provider and API key
-  btw --help              Show this message
-  btw --version           Print version
+  btw <question>            Ask a question (uses auto-global session)
+  btw                       Open multiline input
+  btw connect               Set up AI provider and API key
+  btw shell                 Print export BTW_SESSION_ID for per-terminal sessions
+  btw shell --install       Add session init to your shell config
+  btw session global        Switch to global session mode
+  btw session per-terminal  Switch to per-terminal session mode
+  btw --help                Show this message
+  btw --version             Print version
 
 Options:
-  --no-thinking           Hide thinking/reasoning output
+  --no-thinking             Hide thinking/reasoning output
   --model <provider:model>  Override model for this query`);
 }
 

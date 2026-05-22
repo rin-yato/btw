@@ -7,6 +7,8 @@ import { parseArgs, printHelp, printVersion } from "@/cli";
 import { connectCmd } from "@/cmd/connect";
 import { modelCmd } from "@/cmd/model";
 import { promptCmd, questionCmd } from "@/cmd/question";
+import { sessionCmd } from "@/cmd/session";
+import { shellCmd } from "@/cmd/shell";
 
 async function run(): Promise<void> {
   const parsedResult = parseArgs(process.argv);
@@ -30,6 +32,12 @@ async function run(): Promise<void> {
       return;
     case "model":
       await modelCmd();
+      return;
+    case "session":
+      await sessionCmd(parsed.action);
+      return;
+    case "shell":
+      await shellCmd(parsed.install);
       return;
     case "no-args":
       await promptCmd(parsed.noThinking, parsed.modelOverride);

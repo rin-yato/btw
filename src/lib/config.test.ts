@@ -27,6 +27,7 @@ describe("getDefaults", () => {
     expect(getDefaults()).toEqual({
       model: "opencode:deepseek-v4-flash-free",
       showThinking: true,
+      session: "global",
     });
   });
 
@@ -83,6 +84,7 @@ describe("readConfig", () => {
     await config.writeConfig({
       model: "anthropic:claude-sonnet-4-20250514",
       showThinking: false,
+      session: "global",
     });
 
     const result = await config.readConfig();
@@ -91,6 +93,7 @@ describe("readConfig", () => {
       expect(result.value).toEqual({
         model: "anthropic:claude-sonnet-4-20250514",
         showThinking: false,
+        session: "global",
       });
     }
   });
@@ -147,6 +150,7 @@ describe("writeConfig", () => {
     const cfg = {
       model: "anthropic:claude-sonnet-4-20250514",
       showThinking: false,
+      session: "global" as const,
     };
 
     const writeResult = await config.writeConfig(cfg);
@@ -165,6 +169,7 @@ describe("updateConfig", () => {
     await config.writeConfig({
       model: "anthropic:claude-sonnet-4-20250514",
       showThinking: false,
+      session: "global",
     });
 
     const result = await config.updateConfig({ showThinking: true });
@@ -173,6 +178,7 @@ describe("updateConfig", () => {
       expect(result.value).toEqual({
         model: "anthropic:claude-sonnet-4-20250514",
         showThinking: true,
+        session: "global",
       });
     }
 
@@ -181,6 +187,7 @@ describe("updateConfig", () => {
       expect(persisted.value).toEqual({
         model: "anthropic:claude-sonnet-4-20250514",
         showThinking: true,
+        session: "global",
       });
     }
   });
@@ -192,6 +199,7 @@ describe("updateConfig", () => {
       expect(result.value).toEqual({
         model: "anthropic:claude-sonnet-4-20250514",
         showThinking: true,
+        session: "global",
       });
     }
   });

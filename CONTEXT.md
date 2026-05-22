@@ -35,6 +35,15 @@ Running `btw <question>` to ask a **Question** directly as a command argument.
 **Interactive Mode**:
 Running `btw` with no arguments to type a **Question** via a multiline prompt.
 
+**Session**:
+A persistent conversation thread containing an ordered list of **Question**/**Answer** pairs. Prior exchanges in the session are included as context for the next **Question**.
+
+**Session ID**:
+A ULID-formatted unique identifier for a **Session**, passed via the `BTW_SESSION_ID` environment variable. Sortable by creation time.
+
+**Shell Command**:
+The `btw shell` command that prints `export BTW_SESSION_ID=<ulid>` to stdout, meant to be consumed via `eval $(btw shell)`. Each invocation generates a new **Session ID**.
+
 ## Relationships
 
 - A **Question** is submitted via **Inline Mode** or **Interactive Mode**
@@ -43,6 +52,8 @@ Running `btw` with no arguments to type a **Question** via a multiline prompt.
 - A **Model** returns an **Answer** and optionally **Thinking**
 - **Connect** stores a **Credential** for a **Provider**, making its **Models** available
 - A **Model Override** overrides the default **Model** for a single **Question**
+- A **Session** contains an ordered list of **Question**/**Answer** pairs
+- A **Question** may optionally belong to a **Session**; if so, prior **Question**/**Answer** pairs in that **Session** are included as context
 
 ## Example dialogue
 

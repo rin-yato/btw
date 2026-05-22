@@ -28,6 +28,7 @@ let _promptReject: Error | null = null;
 
 mock.module("@earendil-works/pi-agent-core", () => {
   class FakeAgent {
+    state = { messages: [] as any[] };
     private listeners: Array<(event: any) => void> = [];
     private _idleResolve!: () => void;
     private _idle: Promise<void>;

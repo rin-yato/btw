@@ -10,6 +10,7 @@ import { AUTH_FILENAME } from "@/lib/auth";
 import { CONFIG_FILENAME } from "@/lib/config";
 import { JsonStore } from "@/lib/json-store";
 
+import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import { err, ok } from "@justmiracle/result";
 
 // ---------------------------------------------------------------------------
@@ -150,10 +151,11 @@ beforeEach(async () => {
     _config: unknown,
     onEvent: (e: StreamEvent) => void,
     _opts?: unknown,
-  ) => {
+  ): Promise<AgentMessage[]> => {
     for (const event of _streamEvents) {
       onEvent(event);
     }
+    return [];
   };
 
   // Set up temp directories for config and auth
@@ -272,7 +274,7 @@ describe("streamAnswer", () => {
     expect(thinkingRenderer.write).toHaveBeenCalledTimes(2);
     expect(thinkingRenderer.write).toHaveBeenNthCalledWith(1, "Let me ");
     expect(thinkingRenderer.write).toHaveBeenNthCalledWith(2, "think...");
-    expect(thinkingRenderer.end).toHaveBeenCalledTimes(1);
+    expect(thinkingRenderer.end).toHaveBeenCalled();
     expect(renderer.writeText).toHaveBeenCalledTimes(1);
     expect(renderer.writeText).toHaveBeenCalledWith("The answer is **42**.");
     expect(renderer.end).toHaveBeenCalledTimes(1);

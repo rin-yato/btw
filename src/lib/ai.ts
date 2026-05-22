@@ -4,7 +4,7 @@ import type { JsonStoreError } from "@/lib/json-store";
 import { type ParsedModel, parseModelString } from "@/lib/model";
 import { ModelRegistry } from "@/lib/model-registry";
 
-import { Agent } from "@earendil-works/pi-agent-core";
+import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import type { Model } from "@earendil-works/pi-ai";
 import { err, isErr, ok, type Result } from "@justmiracle/result";
 
@@ -192,18 +192,19 @@ export class AiService {
     question: string,
     config: ModelConfig,
     onEvent: (event: StreamEvent) => void,
-    opts?: { signal?: AbortSignal },
-  ): Promise<void> {
+    opts?: { signal?: AbortSignal; priorMessages?: AgentMessage[] },
+  ): Promise<AgentMessage[]> {
     const modelLookup = resolveModel(config.provider, config.model);
     if (isErr(modelLookup)) {
       onEvent({ type: "error", error: modelLookup.error });
-      return;
+      return [];
     }
 
     const agent = new Agent({
       initialState: {
         model: modelLookup.value,
         systemPrompt: DEFAULT_PROMPT,
+        messages: opts?.priorMessages,
       },
       getApiKey: () => config.apiKey,
     });
@@ -237,5 +238,6 @@ export class AiService {
     });
 
     await agent.waitForIdle();
+    return agent.state.messages;
   }
 }
